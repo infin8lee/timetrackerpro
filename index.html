@@ -6,6 +6,7 @@
     <title>🌿 Time Tracker Pro</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <style>
         :root {
             --bg-primary: linear-gradient(135deg, #f8f5f0 0%, #fef8f3 100%);
@@ -530,6 +531,11 @@
                 <!-- Employees Tab -->
                 <div id="employeesTab" class="card hidden">
                     <h2>👥 Employees & Hourly Rates</h2>
+                    <div style="margin-bottom: 16px; display: flex; gap: 12px; flex-wrap: wrap;">
+                        <button id="addEmployeeManuallyBtn" class="button button-primary">➕ Add Employee Manually</button>
+                        <button id="importTimesheetBtn" class="button button-secondary">📥 Import Timesheet PDF</button>
+                        <input type="file" id="timesheetPdfInput" style="display: none;" accept=".pdf">
+                    </div>
                     <div id="employeeRatesList"></div>
                 </div>
 
@@ -678,6 +684,63 @@
                 <label class="label">Correct Clock In Time</label>
                 <input type="datetime-local" id="editRequestClockIn" required>
             </div>
+
+    <!-- Add Employee Manually Modal -->
+    <div id="addEmployeeModal" class="modal-overlay">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeAddEmployeeModal()">&times;</span>
+            <h3 style="color: var(--label-color); margin-bottom: 16px;">➕ Add Employee Manually</h3>
+            <div class="form-group">
+                <label class="label">First Name</label>
+                <input type="text" id="newEmpFirstName" placeholder="John" required>
+            </div>
+            <div class="form-group">
+                <label class="label">Last Name</label>
+                <input type="text" id="newEmpLastName" placeholder="Doe" required>
+            </div>
+            <div class="form-group">
+                <label class="label">Email</label>
+                <input type="email" id="newEmpEmail" placeholder="john@example.com" required>
+            </div>
+            <div class="form-group">
+                <label class="label">Password</label>
+                <input type="password" id="newEmpPassword" placeholder="••••••••" required>
+            </div>
+            <div class="form-group">
+                <label class="label" style="color: var(--text-secondary); font-weight: normal;">
+                    🔢 Employee ID will be auto-generated: <strong id="newEmpIdDisplay">-</strong>
+                </label>
+            </div>
+            <div class="grid-2">
+                <button class="button button-primary" onclick="saveNewEmployee()">✅ Add Employee</button>
+                <button class="button button-secondary" onclick="closeAddEmployeeModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import Timesheet PDF Modal -->
+    <div id="importTimesheetModal" class="modal-overlay">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeImportTimesheetModal()">&times;</span>
+            <h3 style="color: var(--label-color); margin-bottom: 16px;">📥 Import Timesheet PDF</h3>
+            <div class="form-group">
+                <label class="label">Select Timesheet PDF</label>
+                <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 12px;">
+                    Upload an employee's timesheet PDF (from "Download Time Summary"). The system will extract employee info and time entries.
+                </p>
+                <input type="file" id="importPdfInput" accept=".pdf" style="padding: 12px; border: 2px dashed var(--input-border); border-radius: 8px; background: var(--bg-entry); cursor: pointer;">
+            </div>
+            <div id="pdfImportStatus" style="display: none; background: var(--bg-entry); padding: 12px; border-radius: 8px; margin-bottom: 16px; color: var(--text-secondary); font-size: 13px;">
+                <p id="pdfImportMessage"></p>
+                <div id="importedDataPreview" style="margin-top: 12px;"></div>
+            </div>
+            <div class="grid-2">
+                <button class="button button-primary" id="confirmImportBtn" onclick="confirmImportTimesheet()" style="display: none;">✅ Import Data</button>
+                <button class="button button-secondary" onclick="closeImportTimesheetModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
             <div class="form-group">
                 <label class="label">Correct Clock Out Time</label>
                 <input type="datetime-local" id="editRequestClockOut" required>
@@ -981,33 +1044,49 @@
 
             try {
                 const pdf = new jsPDF('p', 'mm', 'a4');
+                pdf.setFillColor(255, 255, 255); // White background
+                pdf.rect(0, 0, 210, 297, 'F');
+
+                // Midnight Blue color: RGB(26, 26, 46)
+                const midnightBlue = [26, 26, 46];
+
                 let yPos = 20;
                 let totalHours = 0;
                 const projectBreakdown = {};
 
                 // Title
                 pdf.setFontSize(20);
-                pdf.setTextColor(157, 212, 168);
-                pdf.text('📊 Time Summary Report', 20, yPos);
-                yPos += 12;
+                pdf.setTextColor(...midnightBlue);
+                pdf.setFont(undefined, 'bold');
+                pdf.text('Time Summary Report', 20, yPos);
+                pdf.setFont(undefined, 'normal');
+                yPos += 14;
 
-                // Employee Info
-                pdf.setFontSize(11);
-                pdf.setTextColor(240, 240, 240);
+                // Employee Info - Clean and Minimalist
+                pdf.setFontSize(10);
+                pdf.setTextColor(...midnightBlue);
                 pdf.text(`Employee: ${fullName}`, 20, yPos);
-                yPos += 7;
+                yPos += 6;
                 pdf.text(`Employee ID: EMP #${empId}`, 20, yPos);
-                yPos += 7;
+                yPos += 6;
                 pdf.text(`Email: ${state.currentUser}`, 20, yPos);
-                yPos += 7;
+                yPos += 6;
                 pdf.text(`Generated: ${new Date().toLocaleDateString()}`, 20, yPos);
                 yPos += 12;
 
-                // Project Breakdown
+                // Divider line
+                pdf.setDrawColor(...midnightBlue);
+                pdf.setLineWidth(0.5);
+                pdf.line(20, yPos, 190, yPos);
+                yPos += 8;
+
+                // Project Breakdown Section
                 pdf.setFontSize(12);
-                pdf.setTextColor(157, 212, 168);
+                pdf.setFont(undefined, 'bold');
+                pdf.setTextColor(...midnightBlue);
                 pdf.text('Project Breakdown', 20, yPos);
-                yPos += 10;
+                pdf.setFont(undefined, 'normal');
+                yPos += 9;
 
                 entries.forEach(entry => {
                     const hours = parseFloat(calculateHours(entry));
@@ -1016,63 +1095,83 @@
                     projectBreakdown[proj] = (projectBreakdown[proj] || 0) + hours;
                 });
 
-                // Project table header
-                pdf.setFontSize(10);
-                pdf.setTextColor(157, 212, 168);
-                pdf.text('Project', 20, yPos);
-                pdf.text('Hours', 140, yPos, { align: 'right' });
+                // Project table
+                pdf.setFontSize(9);
+                pdf.setTextColor(...midnightBlue);
+                pdf.setFillColor(230, 230, 240); // Very light blue for header background
+                pdf.rect(20, yPos - 5, 170, 6, 'F');
+                pdf.text('Project', 22, yPos);
+                pdf.text('Hours', 185, yPos, { align: 'right' });
                 yPos += 7;
 
-                // Project table rows
-                pdf.setTextColor(240, 240, 240);
                 Object.entries(projectBreakdown).forEach(([proj, hours]) => {
-                    pdf.text(proj.substring(0, 50), 20, yPos);
-                    pdf.text(hours.toFixed(2), 140, yPos, { align: 'right' });
+                    pdf.setTextColor(...midnightBlue);
+                    pdf.text(proj.substring(0, 50), 22, yPos);
+                    pdf.text(hours.toFixed(2), 185, yPos, { align: 'right' });
                     yPos += 6;
                 });
                 yPos += 8;
 
-                // Time Entries
-                pdf.setFontSize(12);
-                pdf.setTextColor(157, 212, 168);
-                pdf.text('Time Entries', 20, yPos);
-                yPos += 10;
+                // Divider line
+                pdf.setDrawColor(...midnightBlue);
+                pdf.line(20, yPos, 190, yPos);
+                yPos += 8;
 
-                pdf.setFontSize(9);
-                pdf.setTextColor(157, 212, 168);
-                pdf.text('Date', 20, yPos);
-                pdf.text('Time In', 50, yPos);
-                pdf.text('Time Out', 90, yPos);
-                pdf.text('Hours', 130, yPos, { align: 'right' });
-                pdf.text('Project', 145, yPos);
+                // Time Entries Section
+                pdf.setFontSize(12);
+                pdf.setFont(undefined, 'bold');
+                pdf.setTextColor(...midnightBlue);
+                pdf.text('Time Entries', 20, yPos);
+                pdf.setFont(undefined, 'normal');
+                yPos += 9;
+
+                // Time entries table header
+                pdf.setFontSize(8);
+                pdf.setTextColor(...midnightBlue);
+                pdf.setFillColor(230, 230, 240); // Very light blue for header background
+                pdf.rect(20, yPos - 5, 170, 6, 'F');
+                pdf.text('Date', 22, yPos);
+                pdf.text('Time In', 55, yPos);
+                pdf.text('Time Out', 95, yPos);
+                pdf.text('Hours', 135, yPos, { align: 'right' });
+                pdf.text('Project', 150, yPos);
                 yPos += 7;
 
-                pdf.setTextColor(240, 240, 240);
+                // Time entries table rows
                 entries.forEach(entry => {
                     const hours = calculateHours(entry);
                     const date = formatDate(entry.clockIn);
                     const timeIn = formatTime(entry.clockIn);
                     const timeOut = formatTime(entry.clockOut);
-                    const proj = (entry.project || '-').substring(0, 20);
+                    const proj = (entry.project || '-').substring(0, 25);
 
-                    pdf.text(date, 20, yPos);
-                    pdf.text(timeIn, 50, yPos);
-                    pdf.text(timeOut, 90, yPos);
-                    pdf.text(hours, 130, yPos, { align: 'right' });
-                    pdf.text(proj, 145, yPos);
+                    pdf.setTextColor(...midnightBlue);
+                    pdf.text(date, 22, yPos);
+                    pdf.text(timeIn, 55, yPos);
+                    pdf.text(timeOut, 95, yPos);
+                    pdf.text(hours, 135, yPos, { align: 'right' });
+                    pdf.text(proj, 150, yPos);
                     yPos += 6;
 
                     if (yPos > 270) {
                         pdf.addPage();
+                        pdf.setFillColor(255, 255, 255);
+                        pdf.rect(0, 0, 210, 297, 'F');
                         yPos = 20;
                     }
                 });
 
                 yPos += 10;
 
-                // Total
+                // Divider line
+                pdf.setDrawColor(...midnightBlue);
+                pdf.line(20, yPos, 190, yPos);
+                yPos += 10;
+
+                // Total Hours - Bold
                 pdf.setFontSize(12);
-                pdf.setTextColor(157, 212, 168);
+                pdf.setFont(undefined, 'bold');
+                pdf.setTextColor(...midnightBlue);
                 pdf.text(`TOTAL HOURS: ${totalHours.toFixed(2)}`, 20, yPos);
 
                 pdf.save(`${fullName.replace(/\s+/g, '-')}-time-summary-${new Date().toISOString().split('T')[0]}.pdf`);
@@ -1917,6 +2016,9 @@
 
         // Generate PDF Invoice using jsPDF directly
         function generateInvoicePDF() {
+            const midnightBlue = [26, 26, 46];
+            const lightBlue = [230, 230, 240];
+
             const email = state.currentInvoiceEmployee;
             let entries = state.currentInvoiceEntries;
             const user = state.users.find(u => u.email === email);
@@ -1957,133 +2059,207 @@
                 const empId = String(user.employeeId).padStart(5, '0');
 
                 const pdf = new jsPDF('p', 'mm', 'a4');
-                let yPos = 20;
+                let yPos = 10;
+
+                // White background
+                pdf.setFillColor(255, 255, 255);
+                pdf.rect(0, 0, 210, 297, 'F');
 
                 // Title
+                pdf.setFont(undefined, 'bold');
                 pdf.setFontSize(24);
-                pdf.setTextColor(157, 212, 168);
-                pdf.text('🌿 ' + invoiceTitle, 20, yPos);
+                pdf.setTextColor(...midnightBlue);
+                pdf.text(invoiceTitle, 20, yPos);
                 yPos += 12;
 
-                pdf.setFontSize(10);
-                pdf.setTextColor(141, 212, 184);
-                pdf.text('Time Tracker Invoice', 20, yPos);
-                yPos += 15;
+                // Divider
+                pdf.setDrawColor(...midnightBlue);
+                pdf.setLineWidth(0.5);
+                pdf.line(20, yPos, 190, yPos);
+                yPos += 8;
 
-                // Employee Details
-                pdf.setFontSize(12);
-                pdf.setTextColor(157, 212, 168);
-                pdf.text('Employee Details', 20, yPos);
+                // Company Info
+                pdf.setFont(undefined, 'bold');
+                pdf.setFontSize(10);
+                pdf.setTextColor(...midnightBlue);
+                pdf.text('Time Tracker Invoice', 20, yPos);
+                yPos += 5;
+                pdf.setFont(undefined, 'normal');
+                pdf.setFontSize(9);
+                pdf.text(`Invoice Date: ${invoiceDate}`, 20, yPos);
+                yPos += 8;
+
+                // Employee Details Section Header
+                pdf.setFillColor(...lightBlue);
+                pdf.rect(20, yPos, 170, 6, 'F');
+                pdf.setFont(undefined, 'bold');
+                pdf.setFontSize(10);
+                pdf.setTextColor(...midnightBlue);
+                pdf.text('EMPLOYEE DETAILS', 22, yPos + 4);
                 yPos += 10;
 
-                pdf.setFontSize(10);
-                pdf.setTextColor(240, 240, 240);
+                pdf.setFont(undefined, 'normal');
+                pdf.setFontSize(9);
+                pdf.setTextColor(...midnightBlue);
                 pdf.text(`Name: ${user.firstName} ${user.lastName}`, 20, yPos);
-                yPos += 7;
+                yPos += 5;
                 pdf.text(`Employee ID: EMP #${empId}`, 20, yPos);
-                yPos += 7;
+                yPos += 5;
                 pdf.text(`Email: ${email}`, 20, yPos);
-                yPos += 7;
+                yPos += 5;
                 pdf.text(`Hourly Rate: $${rate.toFixed(2)}/hour`, 20, yPos);
-                yPos += 7;
-                pdf.text(`Invoice Date: ${invoiceDate}`, 20, yPos);
-                yPos += 12;
+                yPos += 8;
 
                 // Description if provided
                 if (invoiceDescription) {
-                    pdf.setFontSize(12);
-                    pdf.setTextColor(157, 212, 168);
-                    pdf.text('Description', 20, yPos);
-                    yPos += 8;
+                    pdf.setFillColor(...lightBlue);
+                    pdf.rect(20, yPos, 170, 6, 'F');
+                    pdf.setFont(undefined, 'bold');
                     pdf.setFontSize(10);
-                    pdf.setTextColor(176, 176, 176);
+                    pdf.setTextColor(...midnightBlue);
+                    pdf.text('DESCRIPTION', 22, yPos + 4);
+                    yPos += 10;
+
+                    pdf.setFont(undefined, 'normal');
+                    pdf.setFontSize(9);
+                    pdf.setTextColor(...midnightBlue);
                     const descLines = pdf.splitTextToSize(invoiceDescription, 170);
                     descLines.forEach(line => {
                         pdf.text(line, 20, yPos);
-                        yPos += 6;
+                        yPos += 5;
                     });
-                    yPos += 5;
+                    yPos += 3;
                 }
 
-                // Project Breakdown
-                pdf.setFontSize(12);
-                pdf.setTextColor(157, 212, 168);
-                pdf.text('Project Breakdown', 20, yPos);
+                // Divider
+                pdf.setDrawColor(...midnightBlue);
+                pdf.setLineWidth(0.5);
+                pdf.line(20, yPos, 190, yPos);
+                yPos += 8;
+
+                // Project Breakdown Section
+                pdf.setFillColor(...lightBlue);
+                pdf.rect(20, yPos, 170, 6, 'F');
+                pdf.setFont(undefined, 'bold');
+                pdf.setFontSize(10);
+                pdf.setTextColor(...midnightBlue);
+                pdf.text('PROJECT BREAKDOWN', 22, yPos + 4);
                 yPos += 10;
 
                 // Table header
-                pdf.setFontSize(10);
-                pdf.setTextColor(157, 212, 168);
-                pdf.text('Project', 20, yPos);
-                pdf.text('Hours', 140, yPos, { align: 'right' });
-                pdf.text('Amount', 190, yPos, { align: 'right' });
-                yPos += 7;
+                pdf.setFillColor(...lightBlue);
+                pdf.rect(20, yPos - 2, 170, 6, 'F');
+                pdf.setFont(undefined, 'bold');
+                pdf.setFontSize(9);
+                pdf.setTextColor(...midnightBlue);
+                pdf.text('Project', 22, yPos + 1);
+                pdf.text('Hours', 140, yPos + 1, { align: 'right' });
+                pdf.text('Amount', 185, yPos + 1, { align: 'right' });
+                yPos += 8;
 
                 // Table rows
-                pdf.setTextColor(240, 240, 240);
+                pdf.setFont(undefined, 'normal');
+                pdf.setFontSize(8);
+                pdf.setTextColor(...midnightBlue);
                 Object.entries(projectBreakdown).forEach(([proj, hours]) => {
                     const amount = (hours * rate).toFixed(2);
-                    pdf.text(proj.substring(0, 40), 20, yPos);
+                    pdf.text(proj.substring(0, 40), 22, yPos);
                     pdf.text(hours.toFixed(2), 140, yPos, { align: 'right' });
-                    pdf.text('$' + amount, 190, yPos, { align: 'right' });
-                    yPos += 7;
+                    pdf.text('$' + amount, 185, yPos, { align: 'right' });
+                    yPos += 5;
                 });
                 yPos += 5;
 
+                // Divider
+                pdf.setDrawColor(...midnightBlue);
+                pdf.setLineWidth(0.5);
+                pdf.line(20, yPos, 190, yPos);
+                yPos += 8;
+
                 // Time Entries Table
-                pdf.setFontSize(12);
-                pdf.setTextColor(157, 212, 168);
-                pdf.text('Time Entry Details', 20, yPos);
+                pdf.setFillColor(...lightBlue);
+                pdf.rect(20, yPos, 170, 6, 'F');
+                pdf.setFont(undefined, 'bold');
+                pdf.setFontSize(10);
+                pdf.setTextColor(...midnightBlue);
+                pdf.text('TIME ENTRY DETAILS', 22, yPos + 4);
                 yPos += 10;
 
-                pdf.setFontSize(9);
-                pdf.setTextColor(157, 212, 168);
-                pdf.text('Date', 20, yPos);
-                pdf.text('In', 50, yPos);
-                pdf.text('Out', 80, yPos);
-                pdf.text('Hours', 110, yPos, { align: 'right' });
-                pdf.text('Project', 130, yPos);
-                pdf.text('Task', 160, yPos);
-                yPos += 7;
+                // Table header
+                pdf.setFillColor(...lightBlue);
+                pdf.rect(20, yPos - 2, 170, 6, 'F');
+                pdf.setFont(undefined, 'bold');
+                pdf.setFontSize(8);
+                pdf.setTextColor(...midnightBlue);
+                pdf.text('Date', 22, yPos + 1);
+                pdf.text('In', 50, yPos + 1);
+                pdf.text('Out', 75, yPos + 1);
+                pdf.text('Hours', 105, yPos + 1, { align: 'right' });
+                pdf.text('Project', 125, yPos + 1);
+                pdf.text('Task', 160, yPos + 1);
+                yPos += 8;
 
-                pdf.setTextColor(240, 240, 240);
+                // Table data
+                pdf.setFont(undefined, 'normal');
+                pdf.setFontSize(7);
+                pdf.setTextColor(...midnightBlue);
                 entries.forEach(entry => {
                     const hours = calculateHours(entry);
                     const date = formatDate(entry.clockIn);
                     const timeIn = formatTime(entry.clockIn);
                     const timeOut = formatTime(entry.clockOut);
-                    const proj = (entry.project || '-').substring(0, 15);
-                    const task = (entry.task || '-').substring(0, 15);
+                    const proj = (entry.project || '-').substring(0, 20);
+                    const task = (entry.task || '-').substring(0, 20);
 
-                    pdf.text(date, 20, yPos);
+                    pdf.text(date, 22, yPos);
                     pdf.text(timeIn, 50, yPos);
-                    pdf.text(timeOut, 80, yPos);
-                    pdf.text(hours, 110, yPos, { align: 'right' });
-                    pdf.text(proj, 130, yPos);
+                    pdf.text(timeOut, 75, yPos);
+                    pdf.text(hours, 105, yPos, { align: 'right' });
+                    pdf.text(proj, 125, yPos);
                     pdf.text(task, 160, yPos);
-                    yPos += 6;
+                    yPos += 5;
 
                     if (yPos > 270) {
                         pdf.addPage();
+                        // Restore background on new page
+                        pdf.setFillColor(255, 255, 255);
+                        pdf.rect(0, 0, 210, 297, 'F');
                         yPos = 20;
                     }
                 });
 
                 yPos += 10;
 
+                // Divider
+                pdf.setDrawColor(...midnightBlue);
+                pdf.setLineWidth(0.5);
+                pdf.line(20, yPos, 190, yPos);
+                yPos += 8;
+
                 // Totals
-                pdf.setFontSize(12);
-                pdf.setTextColor(157, 212, 168);
-                pdf.text(`Total Hours: ${totalHours.toFixed(2)}`, 20, yPos);
+                pdf.setFillColor(...lightBlue);
+                pdf.rect(20, yPos, 170, 6, 'F');
+                pdf.setFont(undefined, 'bold');
+                pdf.setFontSize(10);
+                pdf.setTextColor(...midnightBlue);
+                pdf.text('SUMMARY', 22, yPos + 4);
                 yPos += 10;
+
+                pdf.setFont(undefined, 'normal');
+                pdf.setFontSize(10);
+                pdf.setTextColor(...midnightBlue);
+                pdf.text(`Total Hours: ${totalHours.toFixed(2)}`, 20, yPos);
+                yPos += 7;
+                pdf.setFont(undefined, 'bold');
+                pdf.setFontSize(11);
                 pdf.text(`Total Amount Due: $${totalAmount.toFixed(2)}`, 20, yPos);
 
                 pdf.save(`invoice-${user.firstName}-${user.lastName}-${new Date().toISOString().split('T')[0]}.pdf`);
                 closeInvoiceModal();
-                alert('Invoice PDF downloaded successfully!');
+                showMessage('Invoice PDF downloaded successfully!');
             } catch (error) {
                 console.error('Error generating PDF:', error);
-                alert('Error generating PDF. Please check browser console for details.');
+                showMessage('Error generating PDF. Please check browser console for details.');
             }
         }
 
@@ -2117,6 +2293,251 @@
         loadDarkMode();
         loadData();
         showView('login');
+    
+        // Add Employee Manually
+        document.getElementById('addEmployeeManuallyBtn').addEventListener('click', function() {
+            const newEmpId = state.nextEmployeeId;
+            document.getElementById('newEmpIdDisplay').textContent = `EMP #${String(newEmpId).padStart(5, '0')}`;
+            document.getElementById('addEmployeeModal').classList.add('show');
+        });
+
+        function closeAddEmployeeModal() {
+            document.getElementById('addEmployeeModal').classList.remove('show');
+            document.getElementById('newEmpFirstName').value = '';
+            document.getElementById('newEmpLastName').value = '';
+            document.getElementById('newEmpEmail').value = '';
+            document.getElementById('newEmpPassword').value = '';
+        }
+
+        function saveNewEmployee() {
+            const firstName = document.getElementById('newEmpFirstName').value.trim();
+            const lastName = document.getElementById('newEmpLastName').value.trim();
+            const email = document.getElementById('newEmpEmail').value.trim();
+            const password = document.getElementById('newEmpPassword').value;
+
+            if (!firstName || !lastName || !email || !password) {
+                alert('Please fill in all fields');
+                return;
+            }
+
+            if (password.length < 6) {
+                alert('Password must be at least 6 characters long');
+                return;
+            }
+
+            if (state.users.some(u => u.email === email)) {
+                alert('This email is already registered');
+                return;
+            }
+
+            state.users.push({
+                email: email,
+                firstName: firstName,
+                lastName: lastName,
+                password: password,
+                id: Date.now(),
+                employeeId: state.nextEmployeeId
+            });
+
+            state.employeeRates[email] = 0;
+            state.nextEmployeeId++;
+            saveData();
+
+            alert(`✅ Employee added successfully!\n\nName: ${firstName} ${lastName}\nEmployee ID: EMP #${String(state.nextEmployeeId - 1).padStart(5, '0')}\nEmail: ${email}`);
+            closeAddEmployeeModal();
+            renderAdmin();
+        }
+
+        // Import Timesheet PDF
+        document.getElementById('importTimesheetBtn').addEventListener('click', function() {
+            document.getElementById('importTimesheetModal').classList.add('show');
+        });
+
+        function closeImportTimesheetModal() {
+            document.getElementById('importTimesheetModal').classList.remove('show');
+            document.getElementById('importPdfInput').value = '';
+            document.getElementById('pdfImportStatus').style.display = 'none';
+            document.getElementById('confirmImportBtn').style.display = 'none';
+            state.importedPdfData = null;
+        }
+
+        // Set up PDF.js worker
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+        document.getElementById('importPdfInput').addEventListener('change', async function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            try {
+                document.getElementById('pdfImportStatus').style.display = 'block';
+                document.getElementById('pdfImportMessage').textContent = '📂 Parsing PDF...';
+                document.getElementById('importedDataPreview').innerHTML = '';
+                document.getElementById('confirmImportBtn').style.display = 'none';
+
+                const arrayBuffer = await file.arrayBuffer();
+                const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+
+                let fullText = '';
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const textContent = await page.getTextContent();
+                    const pageText = textContent.items.map(item => item.str).join(' ');
+                    fullText += pageText + '\n';
+                }
+
+                const parsedData = parsePdfTimesheet(fullText);
+
+                if (parsedData.employee && parsedData.entries && parsedData.entries.length > 0) {
+                    state.importedPdfData = parsedData;
+
+                    const preview = `
+                        <strong>✅ PDF Parsed Successfully!</strong><br><br>
+                        <strong>Employee Information:</strong><br>
+                        Name: ${parsedData.employee.firstName} ${parsedData.employee.lastName}<br>
+                        Email: ${parsedData.employee.email}<br>
+                        Employee ID: ${parsedData.employee.employeeId}<br><br>
+                        <strong>Time Entries Found:</strong> ${parsedData.entries.length}<br>
+                        Date Range: ${formatDate(new Date(parsedData.entries[0].clockIn))} to ${formatDate(new Date(parsedData.entries[parsedData.entries.length - 1].clockIn))}<br><br>
+                        <em>Click "Import Data" to add this employee and their time entries to the system.</em>
+                    `;
+                    document.getElementById('importedDataPreview').innerHTML = preview;
+                    document.getElementById('pdfImportMessage').textContent = '✅ PDF parsed! Ready to import.';
+                    document.getElementById('confirmImportBtn').style.display = 'inline-block';
+                } else {
+                    document.getElementById('pdfImportMessage').textContent = '⚠️ Could not extract employee data from PDF. Make sure it\'s a Time Summary PDF generated by this app.';
+                }
+            } catch (error) {
+                console.error('PDF parsing error:', error);
+                document.getElementById('pdfImportMessage').textContent = '❌ Error reading PDF. Make sure the file is valid.';
+            }
+        });
+
+        function parsePdfTimesheet(text) {
+            const data = {
+                employee: null,
+                entries: []
+            };
+
+            const nameMatch = text.match(/Employee:\s*(.+?)\n/);
+            const emailMatch = text.match(/Email:\s*([^\s]+@[^\s]+)\s/);
+            const idMatch = text.match(/Employee ID:\s*EMP\s*#(\d+)/);
+
+            if (nameMatch && emailMatch && idMatch) {
+                const fullName = nameMatch[1].trim().split(' ');
+                data.employee = {
+                    firstName: fullName[0],
+                    lastName: fullName.slice(1).join(' '),
+                    email: emailMatch[1].trim(),
+                    employeeId: parseInt(idMatch[1])
+                };
+            }
+
+            const timeEntriesMatch = text.match(/Time Entries[\s\S]*?(?=TOTAL HOURS|$)/);
+            if (timeEntriesMatch) {
+                const entriesText = timeEntriesMatch[0];
+                const lines = entriesText.split('\n');
+                let currentEntry = null;
+
+                for (let line of lines) {
+                    line = line.trim();
+                    if (!line || line === 'Time Entries' || line === 'Date' || line.includes('TOTAL')) continue;
+
+                    const dateTimePattern = /(\d{1,2}\/\d{1,2}\/\d{4})\s+(\d{1,2}:\d{2}\s*(?:AM|PM)?)\s+(\d{1,2}:\d{2}\s*(?:AM|PM)?)/i;
+                    const match = line.match(dateTimePattern);
+
+                    if (match) {
+                        if (currentEntry && currentEntry.clockIn && currentEntry.clockOut) {
+                            data.entries.push(currentEntry);
+                        }
+
+                        const dateStr = match[1];
+                        const timeInStr = match[2];
+                        const timeOutStr = match[3];
+
+                        const [month, day, year] = dateStr.split('/');
+                        const clockInTime = parseTimeString(timeInStr, new Date(year, month - 1, day));
+                        const clockOutTime = parseTimeString(timeOutStr, new Date(year, month - 1, day));
+
+                        currentEntry = {
+                            clockIn: clockInTime,
+                            clockOut: clockOutTime,
+                            project: 'Imported',
+                            task: 'From PDF Import',
+                            id: Date.now() + Math.random()
+                        };
+                    }
+                }
+
+                if (currentEntry && currentEntry.clockIn && currentEntry.clockOut) {
+                    data.entries.push(currentEntry);
+                }
+            }
+
+            return data;
+        }
+
+        function parseTimeString(timeStr, dateObj) {
+            timeStr = timeStr.trim().toUpperCase();
+            let [time, meridiem] = timeStr.includes('AM') || timeStr.includes('PM')
+                ? [timeStr.replace(/\s*(AM|PM)/, ''), timeStr.match(/AM|PM/)[0]]
+                : [timeStr, 'AM'];
+
+            const [hours, minutes] = time.split(':').map(x => parseInt(x));
+            let adjustedHours = hours;
+
+            if (meridiem === 'PM' && adjustedHours !== 12) adjustedHours += 12;
+            if (meridiem === 'AM' && adjustedHours === 12) adjustedHours = 0;
+
+            dateObj.setHours(adjustedHours, minutes, 0);
+            return dateObj;
+        }
+
+        function confirmImportTimesheet() {
+            if (!state.importedPdfData) return;
+
+            const data = state.importedPdfData;
+            const existingEmployee = state.users.find(u => u.email === data.employee.email);
+
+            if (existingEmployee) {
+                data.entries.forEach(entry => {
+                    const isDuplicate = state.timeEntries.some(t =>
+                        t.email === data.employee.email &&
+                        new Date(t.clockIn).getTime() === new Date(entry.clockIn).getTime()
+                    );
+                    if (!isDuplicate) {
+                        state.timeEntries.push({
+                            ...entry,
+                            email: data.employee.email
+                        });
+                    }
+                });
+            } else {
+                state.users.push({
+                    email: data.employee.email,
+                    firstName: data.employee.firstName,
+                    lastName: data.employee.lastName,
+                    password: 'imported' + Date.now(),
+                    id: Date.now(),
+                    employeeId: state.nextEmployeeId
+                });
+
+                state.employeeRates[data.employee.email] = 0;
+                state.nextEmployeeId++;
+
+                data.entries.forEach(entry => {
+                    state.timeEntries.push({
+                        ...entry,
+                        email: data.employee.email
+                    });
+                });
+            }
+
+            saveData();
+            alert(`✅ Import Complete!\n\n${data.entries.length} time entries imported for ${data.employee.firstName} ${data.employee.lastName}`);
+            closeImportTimesheetModal();
+            renderAdmin();
+        }
+
     </script>
 </body>
 </html>
