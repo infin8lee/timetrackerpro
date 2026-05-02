@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🌿 Time Tracker Pro</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         :root {
             --bg-primary: linear-gradient(135deg, #f8f5f0 0%, #fef8f3 100%);
@@ -341,10 +342,129 @@
             color: var(--text-secondary);
         }
 
-        @media print {
-            body {
-                background: white;
-            }
+        #invoicePreview {
+            display: none;
+            background: white;
+            color: #1a1a1a;
+            padding: 40px;
+            font-family: Arial, sans-serif;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .invoice-header {
+            text-align: center;
+            margin-bottom: 40px;
+            border-bottom: 3px solid #a8d5ba;
+            padding-bottom: 20px;
+        }
+
+        .invoice-header h1 {
+            color: #3B6D11;
+            margin: 0;
+            font-size: 32px;
+        }
+
+        .invoice-header p {
+            color: #a8d5ba;
+            margin: 8px 0 0 0;
+            font-size: 14px;
+        }
+
+        .invoice-section {
+            margin-bottom: 30px;
+        }
+
+        .invoice-section h2 {
+            color: #3B6D11;
+            margin: 0 0 12px 0;
+            font-size: 18px;
+            border-bottom: 2px solid #d4b5f0;
+            padding-bottom: 8px;
+        }
+
+        .invoice-section p {
+            margin: 6px 0;
+            color: #333;
+        }
+
+        .invoice-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
+        }
+
+        .invoice-table thead tr {
+            background: #a8d5ba;
+            color: white;
+        }
+
+        .invoice-table th {
+            padding: 12px;
+            text-align: left;
+            border: 1px solid #999;
+        }
+
+        .invoice-table td {
+            padding: 12px;
+            border: 1px solid #ddd;
+        }
+
+        .invoice-table tbody tr:nth-child(even) {
+            background: #f8f5f0;
+        }
+
+        .invoice-totals {
+            background: #f8f5f0;
+            padding: 20px;
+            border-radius: 8px;
+            border: 2px solid #a8d5ba;
+            margin-top: 30px;
+        }
+
+        .invoice-total-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-size: 16px;
+            color: #3B6D11;
+        }
+
+        .invoice-total-row.final {
+            font-size: 20px;
+            font-weight: bold;
+            border-top: 2px solid #a8d5ba;
+            padding-top: 12px;
+            margin-bottom: 0;
+        }
+
+        .invoice-description {
+            background: #f8f5f0;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #a8d5ba;
+            margin-bottom: 30px;
+        }
+
+        .invoice-description h3 {
+            color: #3B6D11;
+            margin: 0 0 8px 0;
+            font-size: 16px;
+        }
+
+        .invoice-description p {
+            margin: 0;
+            color: #555;
+            white-space: pre-wrap;
+        }
+
+        .invoice-footer {
+            margin-top: 40px;
+            text-align: center;
+            color: #999;
+            font-size: 12px;
+            border-top: 1px solid #ddd;
+            padding-top: 20px;
         }
     </style>
 </head>
@@ -542,6 +662,8 @@
     </div>
 
     <script>
+        const { jsPDF } = window.jspdf;
+
         // Data Management
         const state = {
             currentUser: null,
@@ -992,7 +1114,7 @@
         }
 
         // Generate PDF Invoice
-        function generateInvoicePDF() {
+        async function generateInvoicePDF() {
             const email = state.currentInvoiceEmployee;
             const entries = state.currentInvoiceEntries;
             const user = state.users.find(u => u.email === email);
@@ -1014,17 +1136,16 @@
             const invoiceDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 
             // Create HTML for PDF
-            const invoiceHTML = `
-                <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 40px; background: white; color: #1a1a1a;">
-                    <!-- Header -->
+            const invoiceElement = document.createElement('div');
+            invoiceElement.innerHTML = `
+                <div style="padding: 40px; background: white; color: #1a1a1a; font-family: Arial, sans-serif; max-width: 800px;">
                     <div style="text-align: center; margin-bottom: 40px; border-bottom: 3px solid #a8d5ba; padding-bottom: 20px;">
                         <h1 style="color: #3B6D11; margin: 0; font-size: 32px;">🌿 ${invoiceTitle}</h1>
                         <p style="color: #a8d5ba; margin: 8px 0 0 0; font-size: 14px;">Time Tracker Invoice</p>
                     </div>
 
-                    <!-- Employee Info -->
                     <div style="margin-bottom: 30px;">
-                        <h2 style="color: #3B6D11; margin: 0 0 12px 0; font-size: 18px;">Employee Details</h2>
+                        <h2 style="color: #3B6D11; margin: 0 0 12px 0; font-size: 18px; border-bottom: 2px solid #d4b5f0; padding-bottom: 8px;">Employee Details</h2>
                         <p style="margin: 6px 0; color: #333;"><strong>Name:</strong> ${user.firstName} ${user.lastName}</p>
                         <p style="margin: 6px 0; color: #333;"><strong>Email:</strong> ${email}</p>
                         <p style="margin: 6px 0; color: #333;"><strong>Hourly Rate:</strong> $${rate.toFixed(2)}/hour</p>
@@ -1034,13 +1155,12 @@
                     ${invoiceDescription ? `
                     <div style="margin-bottom: 30px; background: #f8f5f0; padding: 15px; border-radius: 8px; border-left: 4px solid #a8d5ba;">
                         <h3 style="color: #3B6D11; margin: 0 0 8px 0; font-size: 16px;">Description</h3>
-                        <p style="margin: 0; color: #555; white-space: pre-wrap;">${invoiceDescription}</p>
+                        <p style="margin: 0; color: #555; white-space: pre-wrap; line-height: 1.6;">${invoiceDescription}</p>
                     </div>
                     ` : ''}
 
-                    <!-- Project Breakdown -->
                     <div style="margin-bottom: 30px;">
-                        <h2 style="color: #3B6D11; margin: 0 0 12px 0; font-size: 18px;">Project Breakdown</h2>
+                        <h2 style="color: #3B6D11; margin: 0 0 12px 0; font-size: 18px; border-bottom: 2px solid #d4b5f0; padding-bottom: 8px;">Project Breakdown</h2>
                         <table style="width: 100%; border-collapse: collapse;">
                             <thead>
                                 <tr style="background: #a8d5ba; color: white;">
@@ -1061,37 +1181,35 @@
                         </table>
                     </div>
 
-                    <!-- Time Entries Detail -->
                     <div style="margin-bottom: 30px;">
-                        <h2 style="color: #3B6D11; margin: 0 0 12px 0; font-size: 18px;">Time Entry Details</h2>
-                        <table style="width: 100%; border-collapse: collapse;">
+                        <h2 style="color: #3B6D11; margin: 0 0 12px 0; font-size: 18px; border-bottom: 2px solid #d4b5f0; padding-bottom: 8px;">Time Entry Details</h2>
+                        <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
                             <thead>
                                 <tr style="background: #d4b5f0; color: white;">
-                                    <th style="padding: 10px; text-align: left; border: 1px solid #999; font-size: 13px;">Date</th>
-                                    <th style="padding: 10px; text-align: left; border: 1px solid #999; font-size: 13px;">Time In</th>
-                                    <th style="padding: 10px; text-align: left; border: 1px solid #999; font-size: 13px;">Time Out</th>
-                                    <th style="padding: 10px; text-align: right; border: 1px solid #999; font-size: 13px;">Hours</th>
-                                    <th style="padding: 10px; text-align: left; border: 1px solid #999; font-size: 13px;">Project</th>
-                                    <th style="padding: 10px; text-align: left; border: 1px solid #999; font-size: 13px;">Task</th>
+                                    <th style="padding: 10px; text-align: left; border: 1px solid #999;">Date</th>
+                                    <th style="padding: 10px; text-align: left; border: 1px solid #999;">Time In</th>
+                                    <th style="padding: 10px; text-align: left; border: 1px solid #999;">Time Out</th>
+                                    <th style="padding: 10px; text-align: right; border: 1px solid #999;">Hours</th>
+                                    <th style="padding: 10px; text-align: left; border: 1px solid #999;">Project</th>
+                                    <th style="padding: 10px; text-align: left; border: 1px solid #999;">Task</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 ${entries.map(entry => `
                                     <tr style="border: 1px solid #ddd;">
-                                        <td style="padding: 10px; border: 1px solid #ddd; font-size: 13px;">${formatDate(entry.clockIn)}</td>
-                                        <td style="padding: 10px; border: 1px solid #ddd; font-size: 13px;">${formatTime(entry.clockIn)}</td>
-                                        <td style="padding: 10px; border: 1px solid #ddd; font-size: 13px;">${formatTime(entry.clockOut)}</td>
-                                        <td style="padding: 10px; border: 1px solid #ddd; text-align: right; font-size: 13px;">${calculateHours(entry)}</td>
-                                        <td style="padding: 10px; border: 1px solid #ddd; font-size: 13px;">${entry.project || '-'}</td>
-                                        <td style="padding: 10px; border: 1px solid #ddd; font-size: 13px;">${entry.task || '-'}</td>
+                                        <td style="padding: 10px; border: 1px solid #ddd;">${formatDate(entry.clockIn)}</td>
+                                        <td style="padding: 10px; border: 1px solid #ddd;">${formatTime(entry.clockIn)}</td>
+                                        <td style="padding: 10px; border: 1px solid #ddd;">${formatTime(entry.clockOut)}</td>
+                                        <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">${calculateHours(entry)}</td>
+                                        <td style="padding: 10px; border: 1px solid #ddd;">${entry.project || '-'}</td>
+                                        <td style="padding: 10px; border: 1px solid #ddd;">${entry.task || '-'}</td>
                                     </tr>
                                 `).join('')}
                             </tbody>
                         </table>
                     </div>
 
-                    <!-- Totals -->
-                    <div style="background: #f8f5f0; padding: 20px; border-radius: 8px; border: 2px solid #a8d5ba;">
+                    <div style="background: #f8f5f0; padding: 20px; border-radius: 8px; border: 2px solid #a8d5ba; margin-bottom: 30px;">
                         <div style="display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 16px;">
                             <span style="color: #3B6D11; font-weight: bold;">Total Hours:</span>
                             <span style="color: #3B6D11; font-weight: bold;">${totalHours.toFixed(2)}</span>
@@ -1102,7 +1220,6 @@
                         </div>
                     </div>
 
-                    <!-- Footer -->
                     <div style="margin-top: 40px; text-align: center; color: #999; font-size: 12px; border-top: 1px solid #ddd; padding-top: 20px;">
                         <p style="margin: 0;">Generated by Time Tracker Pro • ${invoiceDate}</p>
                         <p style="margin: 8px 0 0 0;">Thank you for your work!</p>
@@ -1110,16 +1227,25 @@
                 </div>
             `;
 
-            const opt = {
-                margin: [10, 10, 10, 10],
-                filename: `invoice-${user.firstName}-${user.lastName}-${new Date().toISOString().split('T')[0]}.pdf`,
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true },
-                jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
-            };
+            try {
+                const canvas = await html2canvas(invoiceElement, {
+                    backgroundColor: '#ffffff',
+                    scale: 2
+                });
 
-            html2pdf().set(opt).from(invoiceHTML).save();
-            closeInvoiceModal();
+                const imgData = canvas.toDataURL('image/png');
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                const imgWidth = 190;
+                const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                
+                pdf.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight);
+                pdf.save(`invoice-${user.firstName}-${user.lastName}-${new Date().toISOString().split('T')[0]}.pdf`);
+                
+                closeInvoiceModal();
+            } catch (error) {
+                console.error('Error generating PDF:', error);
+                alert('Error generating PDF. Please try again.');
+            }
         }
 
         // Dark Mode Toggle
