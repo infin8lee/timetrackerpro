@@ -1503,24 +1503,37 @@
             `;
 
             try {
+                // Add element to DOM temporarily for html2canvas to work
+                const tempContainer = document.createElement('div');
+                tempContainer.style.position = 'fixed';
+                tempContainer.style.left = '-9999px';
+                tempContainer.style.top = '-9999px';
+                tempContainer.appendChild(invoiceElement);
+                document.body.appendChild(tempContainer);
+
                 const canvas = await html2canvas(invoiceElement, {
                     backgroundColor: '#1a1a2e',
-                    scale: 2
+                    scale: 2,
+                    useCORS: true,
+                    logging: false
                 });
+
+                // Remove temp container
+                document.body.removeChild(tempContainer);
 
                 const imgData = canvas.toDataURL('image/png');
                 const pdf = new jsPDF('p', 'mm', 'a4');
                 const imgWidth = 190;
                 const imgHeight = (canvas.height * imgWidth) / canvas.width;
-                
+
                 pdf.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight);
                 pdf.save(`invoice-${user.firstName}-${user.lastName}-${new Date().toISOString().split('T')[0]}.pdf`);
-                
+
                 closeInvoiceModal();
                 alert('Invoice PDF downloaded successfully!');
             } catch (error) {
                 console.error('Error generating PDF:', error);
-                alert('Error generating PDF. Please try again.');
+                alert('Error generating PDF: ' + error.message);
             }
         }
 
