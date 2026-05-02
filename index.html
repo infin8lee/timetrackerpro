@@ -341,131 +341,6 @@
             cursor: pointer;
             color: var(--text-secondary);
         }
-
-        #invoicePreview {
-            display: none;
-            background: white;
-            color: #1a1a1a;
-            padding: 40px;
-            font-family: Arial, sans-serif;
-            border-radius: 8px;
-            margin-top: 20px;
-        }
-
-        .invoice-header {
-            text-align: center;
-            margin-bottom: 40px;
-            border-bottom: 3px solid #a8d5ba;
-            padding-bottom: 20px;
-        }
-
-        .invoice-header h1 {
-            color: #3B6D11;
-            margin: 0;
-            font-size: 32px;
-        }
-
-        .invoice-header p {
-            color: #a8d5ba;
-            margin: 8px 0 0 0;
-            font-size: 14px;
-        }
-
-        .invoice-section {
-            margin-bottom: 30px;
-        }
-
-        .invoice-section h2 {
-            color: #3B6D11;
-            margin: 0 0 12px 0;
-            font-size: 18px;
-            border-bottom: 2px solid #d4b5f0;
-            padding-bottom: 8px;
-        }
-
-        .invoice-section p {
-            margin: 6px 0;
-            color: #333;
-        }
-
-        .invoice-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 12px;
-        }
-
-        .invoice-table thead tr {
-            background: #a8d5ba;
-            color: white;
-        }
-
-        .invoice-table th {
-            padding: 12px;
-            text-align: left;
-            border: 1px solid #999;
-        }
-
-        .invoice-table td {
-            padding: 12px;
-            border: 1px solid #ddd;
-        }
-
-        .invoice-table tbody tr:nth-child(even) {
-            background: #f8f5f0;
-        }
-
-        .invoice-totals {
-            background: #f8f5f0;
-            padding: 20px;
-            border-radius: 8px;
-            border: 2px solid #a8d5ba;
-            margin-top: 30px;
-        }
-
-        .invoice-total-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 12px;
-            font-size: 16px;
-            color: #3B6D11;
-        }
-
-        .invoice-total-row.final {
-            font-size: 20px;
-            font-weight: bold;
-            border-top: 2px solid #a8d5ba;
-            padding-top: 12px;
-            margin-bottom: 0;
-        }
-
-        .invoice-description {
-            background: #f8f5f0;
-            padding: 15px;
-            border-radius: 8px;
-            border-left: 4px solid #a8d5ba;
-            margin-bottom: 30px;
-        }
-
-        .invoice-description h3 {
-            color: #3B6D11;
-            margin: 0 0 8px 0;
-            font-size: 16px;
-        }
-
-        .invoice-description p {
-            margin: 0;
-            color: #555;
-            white-space: pre-wrap;
-        }
-
-        .invoice-footer {
-            margin-top: 40px;
-            text-align: center;
-            color: #999;
-            font-size: 12px;
-            border-top: 1px solid #ddd;
-            padding-top: 20px;
-        }
     </style>
 </head>
 <body>
@@ -707,11 +582,6 @@
         function formatDate(date) {
             if (!date) return '';
             return new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-        }
-
-        function formatDateTime(date) {
-            if (!date) return '';
-            return new Date(date).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true });
         }
 
         function calculateHours(entry) {
@@ -1113,7 +983,7 @@
             state.currentInvoiceEntries = null;
         }
 
-        // Generate PDF Invoice
+        // Generate PDF Invoice with Dark Mode Style
         async function generateInvoicePDF() {
             const email = state.currentInvoiceEmployee;
             const entries = state.currentInvoiceEntries;
@@ -1135,46 +1005,46 @@
             const totalAmount = totalHours * rate;
             const invoiceDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 
-            // Create HTML for PDF
+            // Create HTML for PDF with Dark Mode & Vibrant Colors
             const invoiceElement = document.createElement('div');
             invoiceElement.innerHTML = `
-                <div style="padding: 40px; background: white; color: #1a1a1a; font-family: Arial, sans-serif; max-width: 800px;">
-                    <div style="text-align: center; margin-bottom: 40px; border-bottom: 3px solid #a8d5ba; padding-bottom: 20px;">
-                        <h1 style="color: #3B6D11; margin: 0; font-size: 32px;">🌿 ${invoiceTitle}</h1>
-                        <p style="color: #a8d5ba; margin: 8px 0 0 0; font-size: 14px;">Time Tracker Invoice</p>
+                <div style="padding: 40px; background: #0f1419; color: #e0e0e0; font-family: Arial, sans-serif; max-width: 800px;">
+                    <div style="text-align: center; margin-bottom: 40px; border-bottom: 3px solid #00d9ff; padding-bottom: 20px;">
+                        <h1 style="color: #00ff88; margin: 0; font-size: 32px; text-shadow: 0 0 10px #00ff88;">🌿 ${invoiceTitle}</h1>
+                        <p style="color: #00d9ff; margin: 8px 0 0 0; font-size: 14px; text-shadow: 0 0 5px #00d9ff;">Time Tracker Invoice</p>
                     </div>
 
-                    <div style="margin-bottom: 30px;">
-                        <h2 style="color: #3B6D11; margin: 0 0 12px 0; font-size: 18px; border-bottom: 2px solid #d4b5f0; padding-bottom: 8px;">Employee Details</h2>
-                        <p style="margin: 6px 0; color: #333;"><strong>Name:</strong> ${user.firstName} ${user.lastName}</p>
-                        <p style="margin: 6px 0; color: #333;"><strong>Email:</strong> ${email}</p>
-                        <p style="margin: 6px 0; color: #333;"><strong>Hourly Rate:</strong> $${rate.toFixed(2)}/hour</p>
-                        <p style="margin: 6px 0; color: #333;"><strong>Invoice Date:</strong> ${invoiceDate}</p>
+                    <div style="margin-bottom: 30px; background: #1a2332; padding: 20px; border-radius: 8px; border-left: 4px solid #ff006e;">
+                        <h2 style="color: #00ff88; margin: 0 0 12px 0; font-size: 18px;">Employee Details</h2>
+                        <p style="margin: 8px 0; color: #e0e0e0;"><span style="color: #00d9ff;">Name:</span> ${user.firstName} ${user.lastName}</p>
+                        <p style="margin: 8px 0; color: #e0e0e0;"><span style="color: #00d9ff;">Email:</span> ${email}</p>
+                        <p style="margin: 8px 0; color: #e0e0e0;"><span style="color: #00d9ff;">Hourly Rate:</span> <span style="color: #ffaa00;">$${rate.toFixed(2)}/hour</span></p>
+                        <p style="margin: 8px 0; color: #e0e0e0;"><span style="color: #00d9ff;">Invoice Date:</span> ${invoiceDate}</p>
                     </div>
 
                     ${invoiceDescription ? `
-                    <div style="margin-bottom: 30px; background: #f8f5f0; padding: 15px; border-radius: 8px; border-left: 4px solid #a8d5ba;">
-                        <h3 style="color: #3B6D11; margin: 0 0 8px 0; font-size: 16px;">Description</h3>
-                        <p style="margin: 0; color: #555; white-space: pre-wrap; line-height: 1.6;">${invoiceDescription}</p>
+                    <div style="margin-bottom: 30px; background: #1a2332; padding: 15px; border-radius: 8px; border-left: 4px solid #ff006e;">
+                        <h3 style="color: #00ff88; margin: 0 0 8px 0; font-size: 16px;">Description</h3>
+                        <p style="margin: 0; color: #b0b0b0; white-space: pre-wrap; line-height: 1.6;">${invoiceDescription}</p>
                     </div>
                     ` : ''}
 
                     <div style="margin-bottom: 30px;">
-                        <h2 style="color: #3B6D11; margin: 0 0 12px 0; font-size: 18px; border-bottom: 2px solid #d4b5f0; padding-bottom: 8px;">Project Breakdown</h2>
+                        <h2 style="color: #00ff88; margin: 0 0 12px 0; font-size: 18px; border-bottom: 2px solid #00d9ff; padding-bottom: 8px;">Project Breakdown</h2>
                         <table style="width: 100%; border-collapse: collapse;">
                             <thead>
-                                <tr style="background: #a8d5ba; color: white;">
-                                    <th style="padding: 12px; text-align: left; border: 1px solid #999;">Project</th>
-                                    <th style="padding: 12px; text-align: right; border: 1px solid #999;">Hours</th>
-                                    <th style="padding: 12px; text-align: right; border: 1px solid #999;">Amount</th>
+                                <tr style="background: #1a2332; border: 1px solid #00d9ff;">
+                                    <th style="padding: 12px; text-align: left; color: #00ff88; font-weight: bold;">Project</th>
+                                    <th style="padding: 12px; text-align: right; color: #00ff88; font-weight: bold;">Hours</th>
+                                    <th style="padding: 12px; text-align: right; color: #00ff88; font-weight: bold;">Amount</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 ${Object.entries(projectBreakdown).map(([proj, hours]) => `
-                                    <tr style="border: 1px solid #ddd;">
-                                        <td style="padding: 12px; border: 1px solid #ddd;">${proj}</td>
-                                        <td style="padding: 12px; text-align: right; border: 1px solid #ddd;">${hours.toFixed(2)}</td>
-                                        <td style="padding: 12px; text-align: right; border: 1px solid #ddd;">$${(hours * rate).toFixed(2)}</td>
+                                    <tr style="border: 1px solid #2a3f4f; background: #141d2a;">
+                                        <td style="padding: 12px; color: #e0e0e0;">${proj}</td>
+                                        <td style="padding: 12px; text-align: right; color: #00d9ff;">${hours.toFixed(2)}</td>
+                                        <td style="padding: 12px; text-align: right; color: #ffaa00;">$${(hours * rate).toFixed(2)}</td>
                                     </tr>
                                 `).join('')}
                             </tbody>
@@ -1182,54 +1052,54 @@
                     </div>
 
                     <div style="margin-bottom: 30px;">
-                        <h2 style="color: #3B6D11; margin: 0 0 12px 0; font-size: 18px; border-bottom: 2px solid #d4b5f0; padding-bottom: 8px;">Time Entry Details</h2>
-                        <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                        <h2 style="color: #00ff88; margin: 0 0 12px 0; font-size: 18px; border-bottom: 2px solid #00d9ff; padding-bottom: 8px;">Time Entry Details</h2>
+                        <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
                             <thead>
-                                <tr style="background: #d4b5f0; color: white;">
-                                    <th style="padding: 10px; text-align: left; border: 1px solid #999;">Date</th>
-                                    <th style="padding: 10px; text-align: left; border: 1px solid #999;">Time In</th>
-                                    <th style="padding: 10px; text-align: left; border: 1px solid #999;">Time Out</th>
-                                    <th style="padding: 10px; text-align: right; border: 1px solid #999;">Hours</th>
-                                    <th style="padding: 10px; text-align: left; border: 1px solid #999;">Project</th>
-                                    <th style="padding: 10px; text-align: left; border: 1px solid #999;">Task</th>
+                                <tr style="background: #1a2332; border: 1px solid #00d9ff;">
+                                    <th style="padding: 10px; text-align: left; color: #00ff88; font-weight: bold;">Date</th>
+                                    <th style="padding: 10px; text-align: left; color: #00ff88; font-weight: bold;">Time In</th>
+                                    <th style="padding: 10px; text-align: left; color: #00ff88; font-weight: bold;">Time Out</th>
+                                    <th style="padding: 10px; text-align: right; color: #00ff88; font-weight: bold;">Hours</th>
+                                    <th style="padding: 10px; text-align: left; color: #00ff88; font-weight: bold;">Project</th>
+                                    <th style="padding: 10px; text-align: left; color: #00ff88; font-weight: bold;">Task</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 ${entries.map(entry => `
-                                    <tr style="border: 1px solid #ddd;">
-                                        <td style="padding: 10px; border: 1px solid #ddd;">${formatDate(entry.clockIn)}</td>
-                                        <td style="padding: 10px; border: 1px solid #ddd;">${formatTime(entry.clockIn)}</td>
-                                        <td style="padding: 10px; border: 1px solid #ddd;">${formatTime(entry.clockOut)}</td>
-                                        <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">${calculateHours(entry)}</td>
-                                        <td style="padding: 10px; border: 1px solid #ddd;">${entry.project || '-'}</td>
-                                        <td style="padding: 10px; border: 1px solid #ddd;">${entry.task || '-'}</td>
+                                    <tr style="border: 1px solid #2a3f4f; background: #141d2a;">
+                                        <td style="padding: 10px; color: #00d9ff;">${formatDate(entry.clockIn)}</td>
+                                        <td style="padding: 10px; color: #e0e0e0;">${formatTime(entry.clockIn)}</td>
+                                        <td style="padding: 10px; color: #e0e0e0;">${formatTime(entry.clockOut)}</td>
+                                        <td style="padding: 10px; text-align: right; color: #ffaa00;">${calculateHours(entry)}</td>
+                                        <td style="padding: 10px; color: #e0e0e0;">${entry.project || '-'}</td>
+                                        <td style="padding: 10px; color: #b0b0b0;">${entry.task || '-'}</td>
                                     </tr>
                                 `).join('')}
                             </tbody>
                         </table>
                     </div>
 
-                    <div style="background: #f8f5f0; padding: 20px; border-radius: 8px; border: 2px solid #a8d5ba; margin-bottom: 30px;">
+                    <div style="background: #1a2332; padding: 20px; border-radius: 8px; border: 2px solid #00d9ff; margin-bottom: 30px;">
                         <div style="display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 16px;">
-                            <span style="color: #3B6D11; font-weight: bold;">Total Hours:</span>
-                            <span style="color: #3B6D11; font-weight: bold;">${totalHours.toFixed(2)}</span>
+                            <span style="color: #00ff88; font-weight: bold;">Total Hours:</span>
+                            <span style="color: #00d9ff; font-weight: bold;">${totalHours.toFixed(2)}</span>
                         </div>
-                        <div style="display: flex; justify-content: space-between; font-size: 20px; color: #3B6D11;">
-                            <span style="font-weight: bold;">Total Amount Due:</span>
-                            <span style="font-weight: bold;">$${totalAmount.toFixed(2)}</span>
+                        <div style="display: flex; justify-content: space-between; font-size: 20px;">
+                            <span style="color: #00ff88; font-weight: bold;">Total Amount Due:</span>
+                            <span style="color: #ffaa00; font-weight: bold;">$${totalAmount.toFixed(2)}</span>
                         </div>
                     </div>
 
-                    <div style="margin-top: 40px; text-align: center; color: #999; font-size: 12px; border-top: 1px solid #ddd; padding-top: 20px;">
+                    <div style="margin-top: 40px; text-align: center; color: #666; font-size: 12px; border-top: 1px solid #2a3f4f; padding-top: 20px;">
                         <p style="margin: 0;">Generated by Time Tracker Pro • ${invoiceDate}</p>
-                        <p style="margin: 8px 0 0 0;">Thank you for your work!</p>
+                        <p style="margin: 8px 0 0 0; color: #00d9ff;">Thank you for your work!</p>
                     </div>
                 </div>
             `;
 
             try {
                 const canvas = await html2canvas(invoiceElement, {
-                    backgroundColor: '#ffffff',
+                    backgroundColor: '#0f1419',
                     scale: 2
                 });
 
@@ -1242,6 +1112,7 @@
                 pdf.save(`invoice-${user.firstName}-${user.lastName}-${new Date().toISOString().split('T')[0]}.pdf`);
                 
                 closeInvoiceModal();
+                alert('Invoice PDF downloaded successfully!');
             } catch (error) {
                 console.error('Error generating PDF:', error);
                 alert('Error generating PDF. Please try again.');
