@@ -1036,7 +1036,7 @@
         });
 
         // Download Time Summary as PDF
-        // Export Timesheet as JSON
+        // Export Timesheet as JSON (with filtering)
         document.getElementById('downloadSummaryBtn').addEventListener('click', function() {
             const user = state.users.find(u => u.email === state.currentUser);
             if (!user) {
@@ -1044,9 +1044,60 @@
                 return;
             }
 
-            const entries = state.timeEntries.filter(t => t.email === state.currentUser);
+            // Get filter values
+            const filterType = document.getElementById('employeeFilterTypeSelect')?.value || 'all';
+            const filterStart = document.getElementById('employeeFilterStartDate')?.value;
+            const filterEnd = document.getElementById('employeeFilterEndDate')?.value;
+
+            // Start with all entries for current user
+            let entries = state.timeEntries.filter(t => t.email === state.currentUser);
+
+            // Apply same filters as shown on screen
+            const today = new Date();
+            const startOfWeek = new Date(today);
+            startOfWeek.setDate(today.getDate() - today.getDay());
+            const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+
+            if (filterType === 'today') {
+                entries = entries.filter(e => {
+                    const entryDate = new Date(e.clockIn).toDateString();
+                    return entryDate === today.toDateString();
+                });
+            } else if (filterType === 'week') {
+                entries = entries.filter(e => {
+                    const entryDate = new Date(e.clockIn);
+                    return entryDate >= startOfWeek && entryDate <= today;
+                });
+            } else if (filterType === 'month') {
+                entries = entries.filter(e => {
+                    const entryDate = new Date(e.clockIn);
+                    return entryDate >= startOfMonth && entryDate <= today;
+                });
+            } else if (filterType === 'custom' && (filterStart || filterEnd)) {
+                const startDate = filterStart ? new Date(filterStart) : null;
+                const endDate = filterEnd ? new Date(filterEnd) : null;
+                entries = entries.filter(e => {
+                    const entryDate = new Date(e.clockIn);
+                    if (startDate && entryDate < startDate) return false;
+                    if (endDate) {
+                        endDate.setHours(23, 59, 59);
+                        if (entryDate > endDate) return false;
+                    }
+                    return true;
+                });
+            }
+
             const fullName = `${user.firstName} ${user.lastName}`;
             const empId = String(user.employeeId).padStart(5, '0');
+
+            // Add period info to export
+            let periodLabel = 'all-time';
+            if (filterType === 'today') periodLabel = 'today';
+            else if (filterType === 'week') periodLabel = 'this-week';
+            else if (filterType === 'month') periodLabel = 'this-month';
+            else if (filterType === 'custom' && (filterStart || filterEnd)) {
+                periodLabel = filterStart && filterEnd ? `${filterStart}-to-${filterEnd}` : 'custom-period';
+            }
 
             const exportData = {
                 employee: {
@@ -1056,6 +1107,8 @@
                     employeeId: empId
                 },
                 exportDate: new Date().toISOString(),
+                period: periodLabel,
+                entriesCount: entries.length,
                 timeEntries: entries.map(entry => ({
                     id: entry.id,
                     clockIn: entry.clockIn,
@@ -1070,13 +1123,13 @@
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
-            link.download = `timesheet-${fullName.replace(/\s+/g, '-')}-${new Date().toISOString().split('T')[0]}.json`;
+            link.download = `timesheet-${fullName.replace(/\s+/g, '-')}-${periodLabel}-${new Date().toISOString().split('T')[0]}.json`;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
             URL.revokeObjectURL(url);
 
-            showMessage('Timesheet exported successfully!');
+            showMessage(`Exported ${entries.length} timesheet entries!`);
         });
 
         // View Full Timesheet
