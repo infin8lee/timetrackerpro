@@ -448,11 +448,36 @@
                 </div>
 
                 <div class="card">
-                    <h2>📊 Your Time Entries</h2>
+                    <h2>📊 Your Timesheet</h2>
+                    <div style="background: var(--bg-entry); padding: 16px; border-radius: 8px; margin-bottom: 16px;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                            <div>
+                                <label class="label">Filter Type</label>
+                                <select id="employeeFilterTypeSelect" style="width: 100%; padding: 10px; border-radius: 8px; border: 2px solid var(--input-border); background: var(--bg-card); color: var(--text-primary);">
+                                    <option value="all">All Time</option>
+                                    <option value="today">Today</option>
+                                    <option value="week">This Week</option>
+                                    <option value="month">This Month</option>
+                                    <option value="custom">Custom Date Range</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="label">Start Date</label>
+                                <input type="date" id="employeeFilterStartDate" style="width: 100%; padding: 10px; border-radius: 8px; border: 2px solid var(--input-border); background: var(--bg-card); color: var(--text-primary);">
+                            </div>
+                            <div>
+                                <label class="label">End Date</label>
+                                <input type="date" id="employeeFilterEndDate" style="width: 100%; padding: 10px; border-radius: 8px; border: 2px solid var(--input-border); background: var(--bg-card); color: var(--text-primary);">
+                            </div>
+                        </div>
+                    </div>
                     <div id="employeeTimeEntries">
                         <p style="color: #888; font-size: 14px;">No time entries yet</p>
                     </div>
-                    <button id="downloadSummaryBtn" class="button button-primary full-width" style="margin-top: 16px;">📥 Download Time Summary</button>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px;">
+                        <button id="downloadSummaryBtn" class="button button-primary">📥 Download Time Summary</button>
+                        <button id="viewTimesheetBtn" class="button button-secondary">📋 View Full Timesheet</button>
+                    </div>
                 </div>
             </div>
 
@@ -491,6 +516,34 @@
                 <!-- Entries Tab -->
                 <div id="entriesTab" class="card hidden">
                     <h2>📊 All Time Entries</h2>
+                    <div style="background: var(--bg-entry); padding: 16px; border-radius: 8px; margin-bottom: 16px;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                            <div>
+                                <label class="label">Filter by Employee</label>
+                                <select id="filterEmployeeSelect" style="width: 100%; padding: 10px; border-radius: 8px; border: 2px solid var(--input-border); background: var(--bg-card); color: var(--text-primary);">
+                                    <option value="">All Employees</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="label">Filter Type</label>
+                                <select id="filterTypeSelect" style="width: 100%; padding: 10px; border-radius: 8px; border: 2px solid var(--input-border); background: var(--bg-card); color: var(--text-primary);">
+                                    <option value="all">All Time</option>
+                                    <option value="today">Today</option>
+                                    <option value="week">This Week</option>
+                                    <option value="month">This Month</option>
+                                    <option value="custom">Custom Date Range</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="label">Start Date</label>
+                                <input type="date" id="filterStartDate" style="width: 100%; padding: 10px; border-radius: 8px; border: 2px solid var(--input-border); background: var(--bg-card); color: var(--text-primary);">
+                            </div>
+                            <div>
+                                <label class="label">End Date</label>
+                                <input type="date" id="filterEndDate" style="width: 100%; padding: 10px; border-radius: 8px; border: 2px solid var(--input-border); background: var(--bg-card); color: var(--text-primary);">
+                            </div>
+                        </div>
+                    </div>
                     <div id="allTimeEntriesList"></div>
                 </div>
 
@@ -502,10 +555,22 @@
 
                 <!-- Edit Entry Form -->
                 <div id="editEntryCard" class="card hidden" style="background: #fffaf5; border-left: 4px solid #f4c0d1;">
-                    <h3>✏️ Edit Hours</h3>
+                    <h3>✏️ Edit Time Entry</h3>
                     <div class="form-group">
-                        <label class="label">Hours Worked</label>
-                        <input type="number" id="editedHours" step="0.01" min="0" placeholder="0.00">
+                        <label class="label">Clock In Time</label>
+                        <input type="datetime-local" id="editedClockIn" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="label">Clock Out Time</label>
+                        <input type="datetime-local" id="editedClockOut" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="label">Project</label>
+                        <input type="text" id="editedProject" placeholder="Project name">
+                    </div>
+                    <div class="form-group">
+                        <label class="label">Task</label>
+                        <input type="text" id="editedTask" placeholder="Task description">
                     </div>
                     <div class="grid-2">
                         <button id="saveEditBtn" class="button button-primary">Save Changes</button>
@@ -536,6 +601,31 @@
         </div>
     </div>
 
+    <!-- Timesheet Edit Request Modal -->
+    <div id="editRequestModal" class="modal-overlay">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeEditRequestModal()">&times;</span>
+            <h3 style="color: var(--label-color); margin-bottom: 16px;">✏️ Request Timesheet Edit</h3>
+            <div class="form-group">
+                <label class="label">Correct Clock In Time</label>
+                <input type="datetime-local" id="editRequestClockIn" required>
+            </div>
+            <div class="form-group">
+                <label class="label">Correct Clock Out Time</label>
+                <input type="datetime-local" id="editRequestClockOut" required>
+            </div>
+            <div class="form-group">
+                <label class="label">Reason for Edit</label>
+                <textarea id="editRequestReason" placeholder="Explain why this time entry needs to be corrected..." style="resize: vertical; min-height: 80px;"></textarea>
+            </div>
+            <div id="editRequestDetails" style="background: var(--bg-entry); padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 12px; color: var(--text-secondary);"></div>
+            <div class="grid-2">
+                <button class="button button-primary" onclick="submitEditRequest()">📧 Send Request</button>
+                <button class="button button-secondary" onclick="closeEditRequestModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         const { jsPDF } = window.jspdf;
 
@@ -551,7 +641,13 @@
             clockInTime: null,
             editingEntry: null,
             currentInvoiceEmployee: null,
-            currentInvoiceEntries: null
+            currentInvoiceEntries: null,
+            nextEmployeeId: 10000,
+            filterEmployee: null,
+            filterStartDate: null,
+            filterEndDate: null,
+            filterType: 'all',
+            editRequestEntry: null
         };
 
         // Load data from localStorage
@@ -561,6 +657,16 @@
             if (saved.timeEntries) state.timeEntries = saved.timeEntries;
             if (saved.settings) state.settings = saved.settings;
             if (saved.employeeRates) state.employeeRates = saved.employeeRates;
+            if (saved.nextEmployeeId) state.nextEmployeeId = saved.nextEmployeeId;
+            // Migrate old users without employeeId
+            state.users.forEach((user, idx) => {
+                if (!user.employeeId) {
+                    user.employeeId = 10000 + idx;
+                }
+            });
+            if (state.users.length > 0) {
+                state.nextEmployeeId = Math.max(...state.users.map(u => u.employeeId || 0)) + 1;
+            }
         }
 
         // Save data to localStorage
@@ -569,7 +675,8 @@
                 users: state.users,
                 timeEntries: state.timeEntries,
                 settings: state.settings,
-                employeeRates: state.employeeRates
+                employeeRates: state.employeeRates,
+                nextEmployeeId: state.nextEmployeeId
             }));
         }
 
@@ -656,9 +763,11 @@
                 firstName: firstName,
                 lastName: lastName,
                 password: password,
-                id: Date.now()
+                id: Date.now(),
+                employeeId: state.nextEmployeeId
             });
             state.employeeRates[email] = 0;
+            state.nextEmployeeId++;
             saveData();
             document.getElementById('signupFirstName').value = '';
             document.getElementById('signupLastName').value = '';
@@ -760,7 +869,11 @@
         // Download Time Summary
         document.getElementById('downloadSummaryBtn').addEventListener('click', function() {
             const entries = state.timeEntries.filter(t => t.email === state.currentUser);
-            let content = `TIME SUMMARY REPORT\nEmployee: ${state.currentUser}\nGenerated: ${new Date().toLocaleDateString()}\n\n=====================================\n\n`;
+            const user = state.users.find(u => u.email === state.currentUser);
+            const fullName = user ? `${user.firstName} ${user.lastName}` : state.currentUser;
+            const empId = user ? String(user.employeeId).padStart(5, '0') : 'N/A';
+
+            let content = `TIME SUMMARY REPORT\nEmployee: ${fullName}\nEmployee ID: EMP #${empId}\nEmail: ${state.currentUser}\nGenerated: ${new Date().toLocaleDateString()}\n\n=====================================\n\n`;
             let totalHours = 0;
             entries.forEach(entry => {
                 const hours = calculateHours(entry);
@@ -772,41 +885,30 @@
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `${state.currentUser}-time-summary-${new Date().toISOString().split('T')[0]}.txt`;
+            a.download = `${fullName.replace(/\s+/g, '-')}-time-summary-${new Date().toISOString().split('T')[0]}.txt`;
             a.click();
             window.URL.revokeObjectURL(url);
         });
 
+        // View Full Timesheet
+        document.getElementById('viewTimesheetBtn').addEventListener('click', function() {
+            document.getElementById('employeeFilterTypeSelect').value = 'all';
+            document.getElementById('employeeFilterStartDate').value = '';
+            document.getElementById('employeeFilterEndDate').value = '';
+            renderDashboard();
+        });
+
         // Render Dashboard
         function renderDashboard() {
-            const entries = state.timeEntries.filter(t => t.email === state.currentUser);
+            // Manual Entry Card
             const manualEntryCard = document.getElementById('manualEntryCard');
-
             if (state.settings.allowManualEntry) {
                 manualEntryCard.classList.remove('hidden');
             } else {
                 manualEntryCard.classList.add('hidden');
             }
 
-            let html = '';
-            if (entries.length === 0) {
-                html = '<p style="color: #888; font-size: 14px;">No time entries yet</p>';
-            } else {
-                entries.forEach(entry => {
-                    html += `
-                        <div class="time-entry">
-                            <div class="entry-header">
-                                <span>${formatDate(entry.clockIn)}</span>
-                                <span class="entry-time">${formatTime(entry.clockIn)} - ${formatTime(entry.clockOut)} (${calculateHours(entry)}h)</span>
-                            </div>
-                            <p style="color: var(--text-secondary);">📁 ${entry.project || 'No project'}</p>
-                            <p style="color: var(--text-tertiary);">✓ ${entry.task || 'No task details'}</p>
-                        </div>
-                    `;
-                });
-            }
-            document.getElementById('employeeTimeEntries').innerHTML = html;
-
+            // Clock In/Out Button States
             if (state.clockedIn) {
                 document.getElementById('clockOutBtn').disabled = false;
                 document.getElementById('clockInBtn').disabled = true;
@@ -814,6 +916,84 @@
                 document.getElementById('clockOutBtn').disabled = true;
                 document.getElementById('clockInBtn').disabled = false;
             }
+
+            // Get all entries for current user
+            let allEntries = state.timeEntries.filter(t => t.email === state.currentUser);
+
+            // Apply filters
+            let filteredEntries = [...allEntries];
+            const filterType = document.getElementById('employeeFilterTypeSelect')?.value || 'all';
+            const filterStart = document.getElementById('employeeFilterStartDate')?.value;
+            const filterEnd = document.getElementById('employeeFilterEndDate')?.value;
+
+            const today = new Date();
+            const startOfWeek = new Date(today);
+            startOfWeek.setDate(today.getDate() - today.getDay());
+            const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+
+            if (filterType === 'today') {
+                filteredEntries = filteredEntries.filter(e => {
+                    const entryDate = new Date(e.clockIn).toDateString();
+                    return entryDate === today.toDateString();
+                });
+            } else if (filterType === 'week') {
+                filteredEntries = filteredEntries.filter(e => {
+                    const entryDate = new Date(e.clockIn);
+                    return entryDate >= startOfWeek && entryDate <= today;
+                });
+            } else if (filterType === 'month') {
+                filteredEntries = filteredEntries.filter(e => {
+                    const entryDate = new Date(e.clockIn);
+                    return entryDate >= startOfMonth && entryDate <= today;
+                });
+            } else if (filterType === 'custom' && (filterStart || filterEnd)) {
+                const startDate = filterStart ? new Date(filterStart) : null;
+                const endDate = filterEnd ? new Date(filterEnd) : null;
+                filteredEntries = filteredEntries.filter(e => {
+                    const entryDate = new Date(e.clockIn);
+                    if (startDate && entryDate < startDate) return false;
+                    if (endDate) {
+                        endDate.setHours(23, 59, 59);
+                        if (entryDate > endDate) return false;
+                    }
+                    return true;
+                });
+            }
+
+            // Render entries
+            let html = '';
+            if (filteredEntries.length === 0) {
+                html = '<p style="color: #888; font-size: 14px;">No time entries found for selected period</p>';
+            } else {
+                let totalHours = 0;
+                filteredEntries.forEach(entry => {
+                    const hours = parseFloat(calculateHours(entry));
+                    totalHours += hours;
+                    html += `
+                        <div class="time-entry">
+                            <div class="entry-header">
+                                <span>${formatDate(entry.clockIn)}</span>
+                                <span class="entry-time">${formatTime(entry.clockIn)} - ${formatTime(entry.clockOut)} (${calculateHours(entry)}h)</span>
+                            </div>
+                            <p style="color: var(--text-secondary);">📁 ${entry.project || 'No project'}</p>
+                            <p style="color: var(--text-tertiary); margin-bottom: 8px;">✓ ${entry.task || 'No task details'}</p>
+                            <button class="button button-secondary" style="font-size: 12px; padding: 8px 12px;" onclick="openEditRequestModal(${entry.id})">✏️ Request Edit</button>
+                        </div>
+                    `;
+                });
+                html += `<div style="background: var(--bg-entry); padding: 12px; border-radius: 8px; margin-top: 12px; text-align: right; font-weight: 600; color: var(--label-color);">Period Total: ${totalHours.toFixed(2)} hours</div>`;
+            }
+            document.getElementById('employeeTimeEntries').innerHTML = html;
+
+            // Add filter event listeners
+            const filterElements = ['employeeFilterTypeSelect', 'employeeFilterStartDate', 'employeeFilterEndDate'];
+            filterElements.forEach(id => {
+                const elem = document.getElementById(id);
+                if (elem) {
+                    elem.removeEventListener('change', renderDashboard);
+                    elem.addEventListener('change', renderDashboard);
+                }
+            });
         }
 
         // Admin Tab Switching
@@ -859,9 +1039,11 @@
                 state.users.forEach(user => {
                     const rate = state.employeeRates[user.email] || 0;
                     const fullName = `${user.firstName} ${user.lastName}`;
+                    const empId = String(user.employeeId).padStart(5, '0');
                     employeeHtml += `
                         <div class="time-entry" style="border-left-color: #f4c0d1;">
                             <div style="display: flex; gap: 12px; align-items: center; margin-bottom: 8px;">
+                                <span style="font-weight: 600; color: var(--label-color); font-size: 12px; background: rgba(168, 213, 186, 0.2); padding: 4px 8px; border-radius: 4px;">EMP #${empId}</span>
                                 <span style="font-weight: 600; color: #993556; flex: 1;">👤 ${fullName}</span>
                                 <span style="color: var(--text-tertiary); font-size: 12px;">📧 ${user.email}</span>
                             </div>
@@ -887,26 +1069,100 @@
                 });
             });
 
-            // Entries Tab
+            // Entries Tab - Populate Employee Filter
+            const employeeSelect = document.getElementById('filterEmployeeSelect');
+            if (employeeSelect) {
+                const currentValue = employeeSelect.value;
+                employeeSelect.innerHTML = '<option value="">All Employees</option>';
+                state.users.forEach(user => {
+                    const empId = String(user.employeeId).padStart(5, '0');
+                    const fullName = `${user.firstName} ${user.lastName}`;
+                    employeeSelect.innerHTML += `<option value="${user.email}">${fullName} (EMP #${empId})</option>`;
+                });
+                employeeSelect.value = currentValue;
+            }
+
+            // Entries Tab - Filter Logic
+            let filteredEntries = [...state.timeEntries];
+            const filterEmployee = document.getElementById('filterEmployeeSelect')?.value;
+            const filterType = document.getElementById('filterTypeSelect')?.value || 'all';
+            const filterStart = document.getElementById('filterStartDate')?.value;
+            const filterEnd = document.getElementById('filterEndDate')?.value;
+
+            if (filterEmployee) {
+                filteredEntries = filteredEntries.filter(e => e.email === filterEmployee);
+            }
+
+            const today = new Date();
+            const startOfWeek = new Date(today);
+            startOfWeek.setDate(today.getDate() - today.getDay());
+            const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+
+            if (filterType === 'today') {
+                filteredEntries = filteredEntries.filter(e => {
+                    const entryDate = new Date(e.clockIn).toDateString();
+                    return entryDate === today.toDateString();
+                });
+            } else if (filterType === 'week') {
+                filteredEntries = filteredEntries.filter(e => {
+                    const entryDate = new Date(e.clockIn);
+                    return entryDate >= startOfWeek && entryDate <= today;
+                });
+            } else if (filterType === 'month') {
+                filteredEntries = filteredEntries.filter(e => {
+                    const entryDate = new Date(e.clockIn);
+                    return entryDate >= startOfMonth && entryDate <= today;
+                });
+            } else if (filterType === 'custom' && (filterStart || filterEnd)) {
+                const startDate = filterStart ? new Date(filterStart) : null;
+                const endDate = filterEnd ? new Date(filterEnd) : null;
+                filteredEntries = filteredEntries.filter(e => {
+                    const entryDate = new Date(e.clockIn);
+                    if (startDate && entryDate < startDate) return false;
+                    if (endDate) {
+                        endDate.setHours(23, 59, 59);
+                        if (entryDate > endDate) return false;
+                    }
+                    return true;
+                });
+            }
+
+            // Entries Tab - Render
             let entriesHtml = '';
-            if (state.timeEntries.length === 0) {
-                entriesHtml = '<p style="color: #888; font-size: 14px;">No time entries recorded</p>';
+            if (filteredEntries.length === 0) {
+                entriesHtml = '<p style="color: #888; font-size: 14px;">No time entries found</p>';
             } else {
-                state.timeEntries.forEach(entry => {
+                filteredEntries.forEach(entry => {
+                    const user = state.users.find(u => u.email === entry.email);
+                    const fullName = user ? `${user.firstName} ${user.lastName}` : entry.email;
+                    const empId = user ? String(user.employeeId).padStart(5, '0') : 'N/A';
                     entriesHtml += `
                         <div class="time-entry">
                             <div class="entry-header">
-                                <span>${entry.email}</span>
+                                <div style="display: flex; gap: 8px; align-items: center;">
+                                    <span style="font-weight: 600; font-size: 12px; background: rgba(168, 213, 186, 0.2); padding: 2px 6px; border-radius: 3px;">EMP #${empId}</span>
+                                    <span style="font-weight: 600; color: var(--label-color);">${fullName}</span>
+                                </div>
                                 <span class="entry-time">${formatDate(entry.clockIn)} ${formatTime(entry.clockIn)} - ${formatTime(entry.clockOut)} (${calculateHours(entry)}h)</span>
                             </div>
                             <p style="color: var(--text-secondary);">📁 ${entry.project || 'No project'}</p>
                             <p style="color: var(--text-tertiary); margin-bottom: 8px;">✓ ${entry.task || 'No task details'}</p>
-                            <button class="button button-secondary" style="font-size: 12px; padding: 8px 12px;" onclick="startEditEntry(${entry.id})">✏️ Edit Hours</button>
+                            <button class="button button-secondary" style="font-size: 12px; padding: 8px 12px;" onclick="startEditEntry(${entry.id})">✏️ Edit Entry</button>
                         </div>
                     `;
                 });
             }
             document.getElementById('allTimeEntriesList').innerHTML = entriesHtml;
+
+            // Entries Tab - Event Listeners
+            const filterSelects = ['filterEmployeeSelect', 'filterTypeSelect', 'filterStartDate', 'filterEndDate'];
+            filterSelects.forEach(id => {
+                const elem = document.getElementById(id);
+                if (elem) {
+                    elem.removeEventListener('change', renderAdmin);
+                    elem.addEventListener('change', renderAdmin);
+                }
+            });
 
             // Invoices Tab
             let invoicesHtml = '';
@@ -918,11 +1174,15 @@
                 userEntries.forEach(e => totalHours += parseFloat(calculateHours(e)));
                 const rate = state.employeeRates[user.email] || 0;
                 const totalAmount = totalHours * rate;
+                const empId = String(user.employeeId).padStart(5, '0');
 
                 invoicesHtml += `
                     <div class="invoice-item">
                         <div class="invoice-details">
-                            <p>${user.firstName} ${user.lastName}</p>
+                            <p style="display: flex; gap: 8px; align-items: center;">
+                                <span style="font-weight: 600; font-size: 12px; background: rgba(168, 213, 186, 0.2); padding: 2px 6px; border-radius: 3px;">EMP #${empId}</span>
+                                <span>${user.firstName} ${user.lastName}</span>
+                            </p>
                             <p style="color: var(--text-tertiary);">📧 ${user.email}</p>
                             <p style="color: var(--text-secondary);">Total: ${totalHours.toFixed(2)}h @ $${rate.toFixed(2)}/hr = <span class="amount">$${totalAmount.toFixed(2)}</span></p>
                         </div>
@@ -941,21 +1201,59 @@
         function startEditEntry(entryId) {
             state.editingEntry = state.timeEntries.find(e => e.id === entryId);
             if (state.editingEntry) {
-                const hours = calculateHours(state.editingEntry);
-                document.getElementById('editedHours').value = hours;
+                // Convert dates to datetime-local format
+                const clockInDate = new Date(state.editingEntry.clockIn);
+                const clockOutDate = new Date(state.editingEntry.clockOut);
+
+                const formatDateTimeLocal = (date) => {
+                    const year = date.getFullYear();
+                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                    const day = String(date.getDate()).padStart(2, '0');
+                    const hours = String(date.getHours()).padStart(2, '0');
+                    const minutes = String(date.getMinutes()).padStart(2, '0');
+                    return `${year}-${month}-${day}T${hours}:${minutes}`;
+                };
+
+                document.getElementById('editedClockIn').value = formatDateTimeLocal(clockInDate);
+                document.getElementById('editedClockOut').value = formatDateTimeLocal(clockOutDate);
+                document.getElementById('editedProject').value = state.editingEntry.project || '';
+                document.getElementById('editedTask').value = state.editingEntry.task || '';
                 document.getElementById('editEntryCard').classList.remove('hidden');
             }
         }
 
         document.getElementById('saveEditBtn').addEventListener('click', function() {
-            if (state.editingEntry && document.getElementById('editedHours').value) {
-                const newHours = parseFloat(document.getElementById('editedHours').value);
-                const clockOut = new Date(new Date(state.editingEntry.clockIn).getTime() + newHours * 60 * 60 * 1000);
+            if (state.editingEntry) {
+                const clockInVal = document.getElementById('editedClockIn').value;
+                const clockOutVal = document.getElementById('editedClockOut').value;
+                const project = document.getElementById('editedProject').value;
+                const task = document.getElementById('editedTask').value;
+
+                if (!clockInVal || !clockOutVal) {
+                    alert('Please fill in both clock in and clock out times');
+                    return;
+                }
+
+                const clockIn = new Date(clockInVal);
+                const clockOut = new Date(clockOutVal);
+
+                if (clockOut <= clockIn) {
+                    alert('Clock out time must be after clock in time');
+                    return;
+                }
+
+                state.editingEntry.clockIn = clockIn;
                 state.editingEntry.clockOut = clockOut;
+                state.editingEntry.project = project;
+                state.editingEntry.task = task;
+
                 saveData();
                 state.editingEntry = null;
                 document.getElementById('editEntryCard').classList.add('hidden');
-                document.getElementById('editedHours').value = '';
+                document.getElementById('editedClockIn').value = '';
+                document.getElementById('editedClockOut').value = '';
+                document.getElementById('editedProject').value = '';
+                document.getElementById('editedTask').value = '';
                 alert('Entry updated!');
                 renderAdmin();
             }
@@ -964,7 +1262,10 @@
         document.getElementById('cancelEditBtn').addEventListener('click', function() {
             state.editingEntry = null;
             document.getElementById('editEntryCard').classList.add('hidden');
-            document.getElementById('editedHours').value = '';
+            document.getElementById('editedClockIn').value = '';
+            document.getElementById('editedClockOut').value = '';
+            document.getElementById('editedProject').value = '';
+            document.getElementById('editedTask').value = '';
         });
 
         // Invoice Modal
@@ -981,6 +1282,110 @@
             document.getElementById('invoiceModal').classList.remove('show');
             state.currentInvoiceEmployee = null;
             state.currentInvoiceEntries = null;
+        }
+
+        // Edit Request Modal
+        function openEditRequestModal(entryId) {
+            state.editRequestEntry = state.timeEntries.find(e => e.id === entryId);
+            if (state.editRequestEntry) {
+                const clockInDate = new Date(state.editRequestEntry.clockIn);
+                const clockOutDate = new Date(state.editRequestEntry.clockOut);
+
+                const formatDateTimeLocal = (date) => {
+                    const year = date.getFullYear();
+                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                    const day = String(date.getDate()).padStart(2, '0');
+                    const hours = String(date.getHours()).padStart(2, '0');
+                    const minutes = String(date.getMinutes()).padStart(2, '0');
+                    return `${year}-${month}-${day}T${hours}:${minutes}`;
+                };
+
+                document.getElementById('editRequestClockIn').value = formatDateTimeLocal(clockInDate);
+                document.getElementById('editRequestClockOut').value = formatDateTimeLocal(clockOutDate);
+                document.getElementById('editRequestReason').value = '';
+
+                // Show current entry details
+                const details = `
+                    <strong>Current Entry Details:</strong><br>
+                    📅 ${formatDate(state.editRequestEntry.clockIn)}<br>
+                    🕐 ${formatTime(state.editRequestEntry.clockIn)} - ${formatTime(state.editRequestEntry.clockOut)} (${calculateHours(state.editRequestEntry)}h)<br>
+                    📁 ${state.editRequestEntry.project || 'No project'}<br>
+                    ✓ ${state.editRequestEntry.task || 'No task'}
+                `;
+                document.getElementById('editRequestDetails').innerHTML = details;
+                document.getElementById('editRequestModal').classList.add('show');
+            }
+        }
+
+        function closeEditRequestModal() {
+            document.getElementById('editRequestModal').classList.remove('show');
+            document.getElementById('editRequestClockIn').value = '';
+            document.getElementById('editRequestClockOut').value = '';
+            document.getElementById('editRequestReason').value = '';
+            state.editRequestEntry = null;
+        }
+
+        function submitEditRequest() {
+            if (!state.editRequestEntry) return;
+
+            const user = state.users.find(u => u.email === state.currentUser);
+            const fullName = user ? `${user.firstName} ${user.lastName}` : state.currentUser;
+            const empId = user ? String(user.employeeId).padStart(5, '0') : 'N/A';
+
+            const clockInVal = document.getElementById('editRequestClockIn').value;
+            const clockOutVal = document.getElementById('editRequestClockOut').value;
+            const reason = document.getElementById('editRequestReason').value;
+
+            if (!clockInVal || !clockOutVal) {
+                alert('Please fill in both clock in and clock out times');
+                return;
+            }
+
+            const clockIn = new Date(clockInVal);
+            const clockOut = new Date(clockOutVal);
+
+            if (clockOut <= clockIn) {
+                alert('Clock out time must be after clock in time');
+                return;
+            }
+
+            const currentEntry = state.editRequestEntry;
+            const originalHours = calculateHours(currentEntry);
+            const newHours = ((clockOut - clockIn) / (1000 * 60 * 60)).toFixed(2);
+
+            // Generate email content
+            const emailSubject = encodeURIComponent(`Timesheet Edit Request - ${fullName} (EMP #${empId})`);
+            const emailBody = encodeURIComponent(
+                `TIMESHEET EDIT REQUEST\n\n` +
+                `Employee: ${fullName}\n` +
+                `Employee ID: EMP #${empId}\n` +
+                `Email: ${state.currentUser}\n` +
+                `Date Submitted: ${new Date().toLocaleDateString()}\n` +
+                `\n=== CURRENT ENTRY ===\n` +
+                `Date: ${formatDate(currentEntry.clockIn)}\n` +
+                `Clock In: ${formatTime(currentEntry.clockIn)}\n` +
+                `Clock Out: ${formatTime(currentEntry.clockOut)}\n` +
+                `Hours: ${originalHours}h\n` +
+                `Project: ${currentEntry.project || 'None'}\n` +
+                `Task: ${currentEntry.task || 'None'}\n` +
+                `\n=== REQUESTED CORRECTION ===\n` +
+                `Correct Clock In: ${formatTime(clockIn)}\n` +
+                `Correct Clock Out: ${formatTime(clockOut)}\n` +
+                `Corrected Hours: ${newHours}h\n` +
+                `\n=== REASON FOR EDIT ===\n` +
+                `${reason || 'No reason provided'}\n` +
+                `\nPlease review and approve/reject this request.`
+            );
+
+            // Create mailto link
+            const mailtoLink = `mailto:lcruz.work@outlook.com?subject=${emailSubject}&body=${emailBody}`;
+
+            // Open email client
+            window.location.href = mailtoLink;
+
+            // Close modal and reset
+            closeEditRequestModal();
+            alert('Email client will open with your edit request. Please send the email to complete the request.');
         }
 
         // Generate PDF Invoice with Dark Mode Style
@@ -1005,46 +1410,46 @@
             const totalAmount = totalHours * rate;
             const invoiceDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 
-            // Create HTML for PDF with Dark Mode & Vibrant Colors
+            // Create HTML for PDF with Site Dark Mode Colors
             const invoiceElement = document.createElement('div');
             invoiceElement.innerHTML = `
-                <div style="padding: 40px; background: #0f1419; color: #e0e0e0; font-family: Arial, sans-serif; max-width: 800px;">
-                    <div style="text-align: center; margin-bottom: 40px; border-bottom: 3px solid #00d9ff; padding-bottom: 20px;">
-                        <h1 style="color: #00ff88; margin: 0; font-size: 32px; text-shadow: 0 0 10px #00ff88;">🌿 ${invoiceTitle}</h1>
-                        <p style="color: #00d9ff; margin: 8px 0 0 0; font-size: 14px; text-shadow: 0 0 5px #00d9ff;">Time Tracker Invoice</p>
+                <div style="padding: 40px; background: #1a1a2e; color: #f0f0f0; font-family: Arial, sans-serif; max-width: 800px;">
+                    <div style="text-align: center; margin-bottom: 40px; border-bottom: 3px solid #5a8b7a; padding-bottom: 20px;">
+                        <h1 style="color: #9dd4a8; margin: 0; font-size: 32px;">🌿 ${invoiceTitle}</h1>
+                        <p style="color: #8dd4b8; margin: 8px 0 0 0; font-size: 14px;">Time Tracker Invoice</p>
                     </div>
 
-                    <div style="margin-bottom: 30px; background: #1a2332; padding: 20px; border-radius: 8px; border-left: 4px solid #ff006e;">
-                        <h2 style="color: #00ff88; margin: 0 0 12px 0; font-size: 18px;">Employee Details</h2>
-                        <p style="margin: 8px 0; color: #e0e0e0;"><span style="color: #00d9ff;">Name:</span> ${user.firstName} ${user.lastName}</p>
-                        <p style="margin: 8px 0; color: #e0e0e0;"><span style="color: #00d9ff;">Email:</span> ${email}</p>
-                        <p style="margin: 8px 0; color: #e0e0e0;"><span style="color: #00d9ff;">Hourly Rate:</span> <span style="color: #ffaa00;">$${rate.toFixed(2)}/hour</span></p>
-                        <p style="margin: 8px 0; color: #e0e0e0;"><span style="color: #00d9ff;">Invoice Date:</span> ${invoiceDate}</p>
+                    <div style="margin-bottom: 30px; background: #242438; padding: 20px; border-radius: 8px; border-left: 4px solid #5a8b7a;">
+                        <h2 style="color: #9dd4a8; margin: 0 0 12px 0; font-size: 18px;">Employee Details</h2>
+                        <p style="margin: 8px 0; color: #f0f0f0;"><span style="color: #8dd4b8;">Name:</span> ${user.firstName} ${user.lastName}</p>
+                        <p style="margin: 8px 0; color: #f0f0f0;"><span style="color: #8dd4b8;">Email:</span> ${email}</p>
+                        <p style="margin: 8px 0; color: #f0f0f0;"><span style="color: #8dd4b8;">Hourly Rate:</span> <span style="color: #9dd4a8;">$${rate.toFixed(2)}/hour</span></p>
+                        <p style="margin: 8px 0; color: #f0f0f0;"><span style="color: #8dd4b8;">Invoice Date:</span> ${invoiceDate}</p>
                     </div>
 
                     ${invoiceDescription ? `
-                    <div style="margin-bottom: 30px; background: #1a2332; padding: 15px; border-radius: 8px; border-left: 4px solid #ff006e;">
-                        <h3 style="color: #00ff88; margin: 0 0 8px 0; font-size: 16px;">Description</h3>
+                    <div style="margin-bottom: 30px; background: #242438; padding: 15px; border-radius: 8px; border-left: 4px solid #5a8b7a;">
+                        <h3 style="color: #9dd4a8; margin: 0 0 8px 0; font-size: 16px;">Description</h3>
                         <p style="margin: 0; color: #b0b0b0; white-space: pre-wrap; line-height: 1.6;">${invoiceDescription}</p>
                     </div>
                     ` : ''}
 
                     <div style="margin-bottom: 30px;">
-                        <h2 style="color: #00ff88; margin: 0 0 12px 0; font-size: 18px; border-bottom: 2px solid #00d9ff; padding-bottom: 8px;">Project Breakdown</h2>
+                        <h2 style="color: #9dd4a8; margin: 0 0 12px 0; font-size: 18px; border-bottom: 2px solid #5a8b7a; padding-bottom: 8px;">Project Breakdown</h2>
                         <table style="width: 100%; border-collapse: collapse;">
                             <thead>
-                                <tr style="background: #1a2332; border: 1px solid #00d9ff;">
-                                    <th style="padding: 12px; text-align: left; color: #00ff88; font-weight: bold;">Project</th>
-                                    <th style="padding: 12px; text-align: right; color: #00ff88; font-weight: bold;">Hours</th>
-                                    <th style="padding: 12px; text-align: right; color: #00ff88; font-weight: bold;">Amount</th>
+                                <tr style="background: #242438; border: 1px solid #5a8b7a;">
+                                    <th style="padding: 12px; text-align: left; color: #9dd4a8; font-weight: bold;">Project</th>
+                                    <th style="padding: 12px; text-align: right; color: #9dd4a8; font-weight: bold;">Hours</th>
+                                    <th style="padding: 12px; text-align: right; color: #9dd4a8; font-weight: bold;">Amount</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 ${Object.entries(projectBreakdown).map(([proj, hours]) => `
-                                    <tr style="border: 1px solid #2a3f4f; background: #141d2a;">
-                                        <td style="padding: 12px; color: #e0e0e0;">${proj}</td>
-                                        <td style="padding: 12px; text-align: right; color: #00d9ff;">${hours.toFixed(2)}</td>
-                                        <td style="padding: 12px; text-align: right; color: #ffaa00;">$${(hours * rate).toFixed(2)}</td>
+                                    <tr style="border: 1px solid #2d2d44; background: #1f1f32;">
+                                        <td style="padding: 12px; color: #f0f0f0;">${proj}</td>
+                                        <td style="padding: 12px; text-align: right; color: #8dd4b8;">${hours.toFixed(2)}</td>
+                                        <td style="padding: 12px; text-align: right; color: #9dd4a8;">$${(hours * rate).toFixed(2)}</td>
                                     </tr>
                                 `).join('')}
                             </tbody>
@@ -1052,26 +1457,26 @@
                     </div>
 
                     <div style="margin-bottom: 30px;">
-                        <h2 style="color: #00ff88; margin: 0 0 12px 0; font-size: 18px; border-bottom: 2px solid #00d9ff; padding-bottom: 8px;">Time Entry Details</h2>
+                        <h2 style="color: #9dd4a8; margin: 0 0 12px 0; font-size: 18px; border-bottom: 2px solid #5a8b7a; padding-bottom: 8px;">Time Entry Details</h2>
                         <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
                             <thead>
-                                <tr style="background: #1a2332; border: 1px solid #00d9ff;">
-                                    <th style="padding: 10px; text-align: left; color: #00ff88; font-weight: bold;">Date</th>
-                                    <th style="padding: 10px; text-align: left; color: #00ff88; font-weight: bold;">Time In</th>
-                                    <th style="padding: 10px; text-align: left; color: #00ff88; font-weight: bold;">Time Out</th>
-                                    <th style="padding: 10px; text-align: right; color: #00ff88; font-weight: bold;">Hours</th>
-                                    <th style="padding: 10px; text-align: left; color: #00ff88; font-weight: bold;">Project</th>
-                                    <th style="padding: 10px; text-align: left; color: #00ff88; font-weight: bold;">Task</th>
+                                <tr style="background: #242438; border: 1px solid #5a8b7a;">
+                                    <th style="padding: 10px; text-align: left; color: #9dd4a8; font-weight: bold;">Date</th>
+                                    <th style="padding: 10px; text-align: left; color: #9dd4a8; font-weight: bold;">Time In</th>
+                                    <th style="padding: 10px; text-align: left; color: #9dd4a8; font-weight: bold;">Time Out</th>
+                                    <th style="padding: 10px; text-align: right; color: #9dd4a8; font-weight: bold;">Hours</th>
+                                    <th style="padding: 10px; text-align: left; color: #9dd4a8; font-weight: bold;">Project</th>
+                                    <th style="padding: 10px; text-align: left; color: #9dd4a8; font-weight: bold;">Task</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 ${entries.map(entry => `
-                                    <tr style="border: 1px solid #2a3f4f; background: #141d2a;">
-                                        <td style="padding: 10px; color: #00d9ff;">${formatDate(entry.clockIn)}</td>
-                                        <td style="padding: 10px; color: #e0e0e0;">${formatTime(entry.clockIn)}</td>
-                                        <td style="padding: 10px; color: #e0e0e0;">${formatTime(entry.clockOut)}</td>
-                                        <td style="padding: 10px; text-align: right; color: #ffaa00;">${calculateHours(entry)}</td>
-                                        <td style="padding: 10px; color: #e0e0e0;">${entry.project || '-'}</td>
+                                    <tr style="border: 1px solid #2d2d44; background: #1f1f32;">
+                                        <td style="padding: 10px; color: #8dd4b8;">${formatDate(entry.clockIn)}</td>
+                                        <td style="padding: 10px; color: #f0f0f0;">${formatTime(entry.clockIn)}</td>
+                                        <td style="padding: 10px; color: #f0f0f0;">${formatTime(entry.clockOut)}</td>
+                                        <td style="padding: 10px; text-align: right; color: #9dd4a8;">${calculateHours(entry)}</td>
+                                        <td style="padding: 10px; color: #f0f0f0;">${entry.project || '-'}</td>
                                         <td style="padding: 10px; color: #b0b0b0;">${entry.task || '-'}</td>
                                     </tr>
                                 `).join('')}
@@ -1079,27 +1484,27 @@
                         </table>
                     </div>
 
-                    <div style="background: #1a2332; padding: 20px; border-radius: 8px; border: 2px solid #00d9ff; margin-bottom: 30px;">
+                    <div style="background: #242438; padding: 20px; border-radius: 8px; border: 2px solid #5a8b7a; margin-bottom: 30px;">
                         <div style="display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 16px;">
-                            <span style="color: #00ff88; font-weight: bold;">Total Hours:</span>
-                            <span style="color: #00d9ff; font-weight: bold;">${totalHours.toFixed(2)}</span>
+                            <span style="color: #9dd4a8; font-weight: bold;">Total Hours:</span>
+                            <span style="color: #8dd4b8; font-weight: bold;">${totalHours.toFixed(2)}</span>
                         </div>
                         <div style="display: flex; justify-content: space-between; font-size: 20px;">
-                            <span style="color: #00ff88; font-weight: bold;">Total Amount Due:</span>
-                            <span style="color: #ffaa00; font-weight: bold;">$${totalAmount.toFixed(2)}</span>
+                            <span style="color: #9dd4a8; font-weight: bold;">Total Amount Due:</span>
+                            <span style="color: #9dd4a8; font-weight: bold;">$${totalAmount.toFixed(2)}</span>
                         </div>
                     </div>
 
-                    <div style="margin-top: 40px; text-align: center; color: #666; font-size: 12px; border-top: 1px solid #2a3f4f; padding-top: 20px;">
+                    <div style="margin-top: 40px; text-align: center; color: #888; font-size: 12px; border-top: 1px solid #2d2d44; padding-top: 20px;">
                         <p style="margin: 0;">Generated by Time Tracker Pro • ${invoiceDate}</p>
-                        <p style="margin: 8px 0 0 0; color: #00d9ff;">Thank you for your work!</p>
+                        <p style="margin: 8px 0 0 0; color: #8dd4b8;">Thank you for your work!</p>
                     </div>
                 </div>
             `;
 
             try {
                 const canvas = await html2canvas(invoiceElement, {
-                    backgroundColor: '#0f1419',
+                    backgroundColor: '#1a1a2e',
                     scale: 2
                 });
 
