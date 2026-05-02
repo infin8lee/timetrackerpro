@@ -487,6 +487,7 @@
                     <button class="tab-button active" onclick="switchAdminTab('settings')">⚙️ Settings</button>
                     <button class="tab-button" onclick="switchAdminTab('employees')">👥 Employees & Rates</button>
                     <button class="tab-button" onclick="switchAdminTab('entries')">📊 All Entries</button>
+                    <button class="tab-button" onclick="switchAdminTab('report')">📋 Timesheet Report</button>
                     <button class="tab-button" onclick="switchAdminTab('invoices')">📄 Invoices</button>
                 </div>
 
@@ -547,6 +548,41 @@
                     <div id="allTimeEntriesList"></div>
                 </div>
 
+                <!-- Timesheet Report Tab -->
+                <div id="reportTab" class="card hidden">
+                    <h2>📋 Timesheet Report</h2>
+                    <div style="background: var(--bg-entry); padding: 16px; border-radius: 8px; margin-bottom: 16px;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                            <div>
+                                <label class="label">Filter by Employee</label>
+                                <select id="reportFilterEmployeeSelect" style="width: 100%; padding: 10px; border-radius: 8px; border: 2px solid var(--input-border); background: var(--bg-card); color: var(--text-primary);">
+                                    <option value="">All Employees</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="label">Filter Type</label>
+                                <select id="reportFilterTypeSelect" style="width: 100%; padding: 10px; border-radius: 8px; border: 2px solid var(--input-border); background: var(--bg-card); color: var(--text-primary);">
+                                    <option value="all">All Time</option>
+                                    <option value="today">Today</option>
+                                    <option value="week">This Week</option>
+                                    <option value="month">This Month</option>
+                                    <option value="custom">Custom Date Range</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="label">Start Date</label>
+                                <input type="date" id="reportFilterStartDate" style="width: 100%; padding: 10px; border-radius: 8px; border: 2px solid var(--input-border); background: var(--bg-card); color: var(--text-primary);">
+                            </div>
+                            <div>
+                                <label class="label">End Date</label>
+                                <input type="date" id="reportFilterEndDate" style="width: 100%; padding: 10px; border-radius: 8px; border: 2px solid var(--input-border); background: var(--bg-card); color: var(--text-primary);">
+                            </div>
+                        </div>
+                    </div>
+                    <div id="timesheetReportList"></div>
+                    <button id="downloadReportBtn" class="button button-primary full-width" style="margin-top: 16px;">📥 Download Report as PDF</button>
+                </div>
+
                 <!-- Invoices Tab -->
                 <div id="invoicesTab" class="card hidden">
                     <h2>📄 Generate Invoices</h2>
@@ -591,8 +627,21 @@
                 <input type="text" id="invoiceTitle" placeholder="e.g., Monthly Invoice - May 2024">
             </div>
             <div class="form-group">
+                <label class="label">Date Range Filter (Optional)</label>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                    <div>
+                        <label class="label" style="margin-bottom: 4px; font-size: 12px;">From</label>
+                        <input type="date" id="invoiceStartDate" style="width: 100%; padding: 8px; border-radius: 8px; border: 2px solid var(--input-border); background: var(--bg-card); color: var(--text-primary);">
+                    </div>
+                    <div>
+                        <label class="label" style="margin-bottom: 4px; font-size: 12px;">To</label>
+                        <input type="date" id="invoiceEndDate" style="width: 100%; padding: 8px; border-radius: 8px; border: 2px solid var(--input-border); background: var(--bg-card); color: var(--text-primary);">
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
                 <label class="label">Description (Optional)</label>
-                <textarea id="invoiceDescription" placeholder="Add any notes or description..." style="resize: vertical; min-height: 100px;"></textarea>
+                <textarea id="invoiceDescription" placeholder="Add any notes or description..." style="resize: vertical; min-height: 80px;"></textarea>
             </div>
             <div class="grid-2">
                 <button class="button button-primary" onclick="generateInvoicePDF()">📥 Download PDF</button>
@@ -866,36 +915,308 @@
             renderDashboard();
         });
 
-        // Download Time Summary
+        // Download Time Summary as PDF
         document.getElementById('downloadSummaryBtn').addEventListener('click', function() {
-            const entries = state.timeEntries.filter(t => t.email === state.currentUser);
+            const filterType = document.getElementById('employeeFilterTypeSelect')?.value || 'all';
+            const filterStart = document.getElementById('employeeFilterStartDate')?.value;
+            const filterEnd = document.getElementById('employeeFilterEndDate')?.value;
+            let entries = state.timeEntries.filter(t => t.email === state.currentUser);
             const user = state.users.find(u => u.email === state.currentUser);
             const fullName = user ? `${user.firstName} ${user.lastName}` : state.currentUser;
             const empId = user ? String(user.employeeId).padStart(5, '0') : 'N/A';
 
-            let content = `TIME SUMMARY REPORT\nEmployee: ${fullName}\nEmployee ID: EMP #${empId}\nEmail: ${state.currentUser}\nGenerated: ${new Date().toLocaleDateString()}\n\n=====================================\n\n`;
-            let totalHours = 0;
-            entries.forEach(entry => {
-                const hours = calculateHours(entry);
-                totalHours += parseFloat(hours);
-                content += `Date: ${formatDate(entry.clockIn)}\nTime: ${formatTime(entry.clockIn)} - ${formatTime(entry.clockOut)}\nHours: ${hours}\nProject: ${entry.project || 'N/A'}\nTask: ${entry.task || 'N/A'}\n---\n\n`;
-            });
-            content += `=====================================\nTOTAL HOURS: ${totalHours.toFixed(2)}\n`;
-            const blob = new Blob([content], { type: 'text/plain' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `${fullName.replace(/\s+/g, '-')}-time-summary-${new Date().toISOString().split('T')[0]}.txt`;
-            a.click();
-            window.URL.revokeObjectURL(url);
+            // Apply same filters as shown on screen
+            const today = new Date();
+            const startOfWeek = new Date(today);
+            startOfWeek.setDate(today.getDate() - today.getDay());
+            const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+
+            if (filterType === 'today') {
+                entries = entries.filter(e => {
+                    const entryDate = new Date(e.clockIn).toDateString();
+                    return entryDate === today.toDateString();
+                });
+            } else if (filterType === 'week') {
+                entries = entries.filter(e => {
+                    const entryDate = new Date(e.clockIn);
+                    return entryDate >= startOfWeek && entryDate <= today;
+                });
+            } else if (filterType === 'month') {
+                entries = entries.filter(e => {
+                    const entryDate = new Date(e.clockIn);
+                    return entryDate >= startOfMonth && entryDate <= today;
+                });
+            } else if (filterType === 'custom' && (filterStart || filterEnd)) {
+                const startDate = filterStart ? new Date(filterStart) : null;
+                const endDate = filterEnd ? new Date(filterEnd) : null;
+                entries = entries.filter(e => {
+                    const entryDate = new Date(e.clockIn);
+                    if (startDate && entryDate < startDate) return false;
+                    if (endDate) {
+                        endDate.setHours(23, 59, 59);
+                        if (entryDate > endDate) return false;
+                    }
+                    return true;
+                });
+            }
+
+            try {
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                let yPos = 20;
+                let totalHours = 0;
+                const projectBreakdown = {};
+
+                // Title
+                pdf.setFontSize(20);
+                pdf.setTextColor(157, 212, 168);
+                pdf.text('📊 Time Summary Report', 20, yPos);
+                yPos += 12;
+
+                // Employee Info
+                pdf.setFontSize(11);
+                pdf.setTextColor(240, 240, 240);
+                pdf.text(`Employee: ${fullName}`, 20, yPos);
+                yPos += 7;
+                pdf.text(`Employee ID: EMP #${empId}`, 20, yPos);
+                yPos += 7;
+                pdf.text(`Email: ${state.currentUser}`, 20, yPos);
+                yPos += 7;
+                pdf.text(`Generated: ${new Date().toLocaleDateString()}`, 20, yPos);
+                yPos += 12;
+
+                // Project Breakdown
+                pdf.setFontSize(12);
+                pdf.setTextColor(157, 212, 168);
+                pdf.text('Project Breakdown', 20, yPos);
+                yPos += 10;
+
+                entries.forEach(entry => {
+                    const hours = parseFloat(calculateHours(entry));
+                    totalHours += hours;
+                    const proj = entry.project || 'Other';
+                    projectBreakdown[proj] = (projectBreakdown[proj] || 0) + hours;
+                });
+
+                // Project table header
+                pdf.setFontSize(10);
+                pdf.setTextColor(157, 212, 168);
+                pdf.text('Project', 20, yPos);
+                pdf.text('Hours', 140, yPos, { align: 'right' });
+                yPos += 7;
+
+                // Project table rows
+                pdf.setTextColor(240, 240, 240);
+                Object.entries(projectBreakdown).forEach(([proj, hours]) => {
+                    pdf.text(proj.substring(0, 50), 20, yPos);
+                    pdf.text(hours.toFixed(2), 140, yPos, { align: 'right' });
+                    yPos += 6;
+                });
+                yPos += 8;
+
+                // Time Entries
+                pdf.setFontSize(12);
+                pdf.setTextColor(157, 212, 168);
+                pdf.text('Time Entries', 20, yPos);
+                yPos += 10;
+
+                pdf.setFontSize(9);
+                pdf.setTextColor(157, 212, 168);
+                pdf.text('Date', 20, yPos);
+                pdf.text('Time In', 50, yPos);
+                pdf.text('Time Out', 90, yPos);
+                pdf.text('Hours', 130, yPos, { align: 'right' });
+                pdf.text('Project', 145, yPos);
+                yPos += 7;
+
+                pdf.setTextColor(240, 240, 240);
+                entries.forEach(entry => {
+                    const hours = calculateHours(entry);
+                    const date = formatDate(entry.clockIn);
+                    const timeIn = formatTime(entry.clockIn);
+                    const timeOut = formatTime(entry.clockOut);
+                    const proj = (entry.project || '-').substring(0, 20);
+
+                    pdf.text(date, 20, yPos);
+                    pdf.text(timeIn, 50, yPos);
+                    pdf.text(timeOut, 90, yPos);
+                    pdf.text(hours, 130, yPos, { align: 'right' });
+                    pdf.text(proj, 145, yPos);
+                    yPos += 6;
+
+                    if (yPos > 270) {
+                        pdf.addPage();
+                        yPos = 20;
+                    }
+                });
+
+                yPos += 10;
+
+                // Total
+                pdf.setFontSize(12);
+                pdf.setTextColor(157, 212, 168);
+                pdf.text(`TOTAL HOURS: ${totalHours.toFixed(2)}`, 20, yPos);
+
+                pdf.save(`${fullName.replace(/\s+/g, '-')}-time-summary-${new Date().toISOString().split('T')[0]}.pdf`);
+                alert('Time Summary PDF downloaded successfully!');
+            } catch (error) {
+                console.error('Error generating PDF:', error);
+                alert('Error generating PDF');
+            }
         });
 
         // View Full Timesheet
         document.getElementById('viewTimesheetBtn').addEventListener('click', function() {
-            document.getElementById('employeeFilterTypeSelect').value = 'all';
+            document.getElementById('employeeFilterTypeSelect').value = 'week';
             document.getElementById('employeeFilterStartDate').value = '';
             document.getElementById('employeeFilterEndDate').value = '';
             renderDashboard();
+        });
+
+        // Download Admin Timesheet Report as PDF
+        document.getElementById('downloadReportBtn').addEventListener('click', function() {
+            const reportFilterEmployee = document.getElementById('reportFilterEmployeeSelect')?.value;
+            const reportFilterType = document.getElementById('reportFilterTypeSelect')?.value || 'all';
+            const reportFilterStart = document.getElementById('reportFilterStartDate')?.value;
+            const reportFilterEnd = document.getElementById('reportFilterEndDate')?.value;
+
+            let reportEntries = [...state.timeEntries];
+            const today = new Date();
+            const startOfWeek = new Date(today);
+            startOfWeek.setDate(today.getDate() - today.getDay());
+            const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+
+            if (reportFilterEmployee) {
+                reportEntries = reportEntries.filter(e => e.email === reportFilterEmployee);
+            }
+
+            if (reportFilterType === 'today') {
+                reportEntries = reportEntries.filter(e => {
+                    const entryDate = new Date(e.clockIn).toDateString();
+                    return entryDate === today.toDateString();
+                });
+            } else if (reportFilterType === 'week') {
+                reportEntries = reportEntries.filter(e => {
+                    const entryDate = new Date(e.clockIn);
+                    return entryDate >= startOfWeek && entryDate <= today;
+                });
+            } else if (reportFilterType === 'month') {
+                reportEntries = reportEntries.filter(e => {
+                    const entryDate = new Date(e.clockIn);
+                    return entryDate >= startOfMonth && entryDate <= today;
+                });
+            } else if (reportFilterType === 'custom' && (reportFilterStart || reportFilterEnd)) {
+                const startDate = reportFilterStart ? new Date(reportFilterStart) : null;
+                const endDate = reportFilterEnd ? new Date(reportFilterEnd) : null;
+                reportEntries = reportEntries.filter(e => {
+                    const entryDate = new Date(e.clockIn);
+                    if (startDate && entryDate < startDate) return false;
+                    if (endDate) {
+                        endDate.setHours(23, 59, 59);
+                        if (entryDate > endDate) return false;
+                    }
+                    return true;
+                });
+            }
+
+            try {
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                let yPos = 20;
+
+                // Title
+                pdf.setFontSize(18);
+                pdf.setTextColor(157, 212, 168);
+                pdf.text('📋 Timesheet Report', 20, yPos);
+                yPos += 10;
+
+                // Report period/filters
+                pdf.setFontSize(10);
+                pdf.setTextColor(240, 240, 240);
+                if (reportFilterEmployee) {
+                    const user = state.users.find(u => u.email === reportFilterEmployee);
+                    pdf.text(`Employee: ${user.firstName} ${user.lastName} (EMP #${String(user.employeeId).padStart(5, '0')})`, 20, yPos);
+                    yPos += 6;
+                }
+                pdf.text(`Generated: ${new Date().toLocaleDateString()}`, 20, yPos);
+                yPos += 10;
+
+                if (reportEntries.length === 0) {
+                    pdf.text('No time entries found', 20, yPos);
+                } else {
+                    // Summary
+                    let totalHours = 0;
+                    const summaryProjectBreakdown = {};
+
+                    reportEntries.forEach(entry => {
+                        const hours = parseFloat(calculateHours(entry));
+                        totalHours += hours;
+                        const proj = entry.project || 'Other';
+                        summaryProjectBreakdown[proj] = (summaryProjectBreakdown[proj] || 0) + hours;
+                    });
+
+                    pdf.setFontSize(12);
+                    pdf.setTextColor(157, 212, 168);
+                    pdf.text('Project Summary', 20, yPos);
+                    yPos += 8;
+
+                    pdf.setFontSize(9);
+                    pdf.setTextColor(240, 240, 240);
+                    Object.entries(summaryProjectBreakdown).forEach(([proj, hours]) => {
+                        pdf.text(`${proj}: ${hours.toFixed(2)}h`, 20, yPos);
+                        yPos += 5;
+                    });
+                    yPos += 5;
+
+                    // Detailed Entries
+                    pdf.setFontSize(12);
+                    pdf.setTextColor(157, 212, 168);
+                    pdf.text('Time Entries', 20, yPos);
+                    yPos += 8;
+
+                    pdf.setFontSize(9);
+                    pdf.setTextColor(157, 212, 168);
+                    pdf.text('Date', 20, yPos);
+                    pdf.text('Employee', 50, yPos);
+                    pdf.text('In', 95, yPos);
+                    pdf.text('Out', 115, yPos);
+                    pdf.text('Hours', 135, yPos, { align: 'right' });
+                    pdf.text('Project', 155, yPos);
+                    yPos += 6;
+
+                    pdf.setTextColor(240, 240, 240);
+                    reportEntries.forEach(entry => {
+                        const user = state.users.find(u => u.email === entry.email);
+                        const empName = user ? user.firstName.substring(0, 8) : entry.email.substring(0, 8);
+                        const timeIn = formatTime(entry.clockIn);
+                        const timeOut = formatTime(entry.clockOut);
+                        const hours = calculateHours(entry);
+                        const proj = (entry.project || '-').substring(0, 20);
+
+                        pdf.text(formatDate(entry.clockIn), 20, yPos);
+                        pdf.text(empName, 50, yPos);
+                        pdf.text(timeIn, 95, yPos);
+                        pdf.text(timeOut, 115, yPos);
+                        pdf.text(hours, 135, yPos, { align: 'right' });
+                        pdf.text(proj, 155, yPos);
+                        yPos += 5;
+
+                        if (yPos > 270) {
+                            pdf.addPage();
+                            yPos = 20;
+                        }
+                    });
+
+                    yPos += 8;
+                    pdf.setFontSize(12);
+                    pdf.setTextColor(157, 212, 168);
+                    pdf.text(`TOTAL HOURS: ${totalHours.toFixed(2)}`, 20, yPos);
+                }
+
+                pdf.save(`timesheet-report-${new Date().toISOString().split('T')[0]}.pdf`);
+                alert('Timesheet Report PDF downloaded successfully!');
+            } catch (error) {
+                console.error('Error generating PDF:', error);
+                alert('Error generating PDF');
+            }
         });
 
         // Render Dashboard
@@ -906,6 +1227,12 @@
                 manualEntryCard.classList.remove('hidden');
             } else {
                 manualEntryCard.classList.add('hidden');
+            }
+
+            // Set default filter to "week" on first load
+            const filterTypeSelect = document.getElementById('employeeFilterTypeSelect');
+            if (filterTypeSelect && !filterTypeSelect.value) {
+                filterTypeSelect.value = 'week';
             }
 
             // Clock In/Out Button States
@@ -922,7 +1249,7 @@
 
             // Apply filters
             let filteredEntries = [...allEntries];
-            const filterType = document.getElementById('employeeFilterTypeSelect')?.value || 'all';
+            const filterType = document.getElementById('employeeFilterTypeSelect')?.value || 'week';
             const filterStart = document.getElementById('employeeFilterStartDate')?.value;
             const filterEnd = document.getElementById('employeeFilterEndDate')?.value;
 
@@ -1007,6 +1334,8 @@
                 document.getElementById('employeesTab').classList.remove('hidden');
             } else if (tab === 'entries') {
                 document.getElementById('entriesTab').classList.remove('hidden');
+            } else if (tab === 'report') {
+                document.getElementById('reportTab').classList.remove('hidden');
             } else if (tab === 'invoices') {
                 document.getElementById('invoicesTab').classList.remove('hidden');
             }
@@ -1164,6 +1493,113 @@
                 }
             });
 
+            // Timesheet Report Tab - Populate Employee Filter
+            const reportEmployeeSelect = document.getElementById('reportFilterEmployeeSelect');
+            if (reportEmployeeSelect) {
+                const currentValue = reportEmployeeSelect.value;
+                reportEmployeeSelect.innerHTML = '<option value="">All Employees</option>';
+                state.users.forEach(user => {
+                    const empId = String(user.employeeId).padStart(5, '0');
+                    const fullName = `${user.firstName} ${user.lastName}`;
+                    reportEmployeeSelect.innerHTML += `<option value="${user.email}">${fullName} (EMP #${empId})</option>`;
+                });
+                reportEmployeeSelect.value = currentValue;
+            }
+
+            // Timesheet Report Tab - Filter Logic
+            let reportEntries = [...state.timeEntries];
+            const reportFilterEmployee = document.getElementById('reportFilterEmployeeSelect')?.value;
+            const reportFilterType = document.getElementById('reportFilterTypeSelect')?.value || 'all';
+            const reportFilterStart = document.getElementById('reportFilterStartDate')?.value;
+            const reportFilterEnd = document.getElementById('reportFilterEndDate')?.value;
+
+            if (reportFilterEmployee) {
+                reportEntries = reportEntries.filter(e => e.email === reportFilterEmployee);
+            }
+
+            if (reportFilterType === 'today') {
+                reportEntries = reportEntries.filter(e => {
+                    const entryDate = new Date(e.clockIn).toDateString();
+                    return entryDate === today.toDateString();
+                });
+            } else if (reportFilterType === 'week') {
+                reportEntries = reportEntries.filter(e => {
+                    const entryDate = new Date(e.clockIn);
+                    return entryDate >= startOfWeek && entryDate <= today;
+                });
+            } else if (reportFilterType === 'month') {
+                reportEntries = reportEntries.filter(e => {
+                    const entryDate = new Date(e.clockIn);
+                    return entryDate >= startOfMonth && entryDate <= today;
+                });
+            } else if (reportFilterType === 'custom' && (reportFilterStart || reportFilterEnd)) {
+                const startDate = reportFilterStart ? new Date(reportFilterStart) : null;
+                const endDate = reportFilterEnd ? new Date(reportFilterEnd) : null;
+                reportEntries = reportEntries.filter(e => {
+                    const entryDate = new Date(e.clockIn);
+                    if (startDate && entryDate < startDate) return false;
+                    if (endDate) {
+                        endDate.setHours(23, 59, 59);
+                        if (entryDate > endDate) return false;
+                    }
+                    return true;
+                });
+            }
+
+            // Timesheet Report Tab - Render
+            let reportHtml = '';
+            if (reportEntries.length === 0) {
+                reportHtml = '<p style="color: #888; font-size: 14px;">No time entries found</p>';
+            } else {
+                let totalReportHours = 0;
+                const reportProjectBreakdown = {};
+
+                reportEntries.forEach(entry => {
+                    const hours = parseFloat(calculateHours(entry));
+                    totalReportHours += hours;
+                    const proj = entry.project || 'Other';
+                    reportProjectBreakdown[proj] = (reportProjectBreakdown[proj] || 0) + hours;
+                });
+
+                reportHtml = '<div style="background: var(--bg-entry); padding: 12px; border-radius: 8px; margin-bottom: 16px;"><strong>Project Breakdown:</strong><br>';
+                Object.entries(reportProjectBreakdown).forEach(([proj, hours]) => {
+                    reportHtml += `${proj}: ${hours.toFixed(2)}h<br>`;
+                });
+                reportHtml += `<strong>Total Hours: ${totalReportHours.toFixed(2)}h</strong></div>`;
+
+                reportHtml += '<div style="max-height: 400px; overflow-y: auto;">';
+                reportEntries.forEach(entry => {
+                    const user = state.users.find(u => u.email === entry.email);
+                    const fullName = user ? `${user.firstName} ${user.lastName}` : entry.email;
+                    const empId = user ? String(user.employeeId).padStart(5, '0') : 'N/A';
+                    reportHtml += `
+                        <div class="time-entry">
+                            <div class="entry-header">
+                                <div style="display: flex; gap: 8px; align-items: center;">
+                                    <span style="font-weight: 600; font-size: 12px; background: rgba(168, 213, 186, 0.2); padding: 2px 6px; border-radius: 3px;">EMP #${empId}</span>
+                                    <span style="font-weight: 600; color: var(--label-color);">${fullName}</span>
+                                </div>
+                                <span class="entry-time">${formatDate(entry.clockIn)} ${formatTime(entry.clockIn)} - ${formatTime(entry.clockOut)} (${calculateHours(entry)}h)</span>
+                            </div>
+                            <p style="color: var(--text-secondary); margin: 4px 0;">📁 ${entry.project || 'No project'}</p>
+                            <p style="color: var(--text-tertiary); margin: 0;">✓ ${entry.task || 'No task details'}</p>
+                        </div>
+                    `;
+                });
+                reportHtml += '</div>';
+            }
+            document.getElementById('timesheetReportList').innerHTML = reportHtml;
+
+            // Timesheet Report - Event Listeners
+            const reportFilterSelects = ['reportFilterEmployeeSelect', 'reportFilterTypeSelect', 'reportFilterStartDate', 'reportFilterEndDate'];
+            reportFilterSelects.forEach(id => {
+                const elem = document.getElementById(id);
+                if (elem) {
+                    elem.removeEventListener('change', renderAdmin);
+                    elem.addEventListener('change', renderAdmin);
+                }
+            });
+
             // Invoices Tab
             let invoicesHtml = '';
             state.users.forEach(user => {
@@ -1274,6 +1710,8 @@
             state.currentInvoiceEmployee = email;
             state.currentInvoiceEntries = entries;
             document.getElementById('invoiceTitle').value = '';
+            document.getElementById('invoiceStartDate').value = '';
+            document.getElementById('invoiceEndDate').value = '';
             document.getElementById('invoiceDescription').value = '';
             document.getElementById('invoiceModal').classList.add('show');
         }
@@ -1388,152 +1826,175 @@
             alert('Email client will open with your edit request. Please send the email to complete the request.');
         }
 
-        // Generate PDF Invoice with Dark Mode Style
-        async function generateInvoicePDF() {
+        // Generate PDF Invoice using jsPDF directly
+        function generateInvoicePDF() {
             const email = state.currentInvoiceEmployee;
-            const entries = state.currentInvoiceEntries;
+            let entries = state.currentInvoiceEntries;
             const user = state.users.find(u => u.email === email);
             const rate = state.employeeRates[email] || 0;
             const invoiceTitle = document.getElementById('invoiceTitle').value || 'Invoice';
             const invoiceDescription = document.getElementById('invoiceDescription').value;
+            const invoiceStartDate = document.getElementById('invoiceStartDate').value;
+            const invoiceEndDate = document.getElementById('invoiceEndDate').value;
 
-            let totalHours = 0;
-            const projectBreakdown = {};
-
-            entries.forEach(entry => {
-                const hours = parseFloat(calculateHours(entry));
-                totalHours += hours;
-                const proj = entry.project || 'Other';
-                projectBreakdown[proj] = (projectBreakdown[proj] || 0) + hours;
-            });
-
-            const totalAmount = totalHours * rate;
-            const invoiceDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-
-            // Create HTML for PDF with Site Dark Mode Colors
-            const invoiceElement = document.createElement('div');
-            invoiceElement.innerHTML = `
-                <div style="padding: 40px; background: #1a1a2e; color: #f0f0f0; font-family: Arial, sans-serif; max-width: 800px;">
-                    <div style="text-align: center; margin-bottom: 40px; border-bottom: 3px solid #5a8b7a; padding-bottom: 20px;">
-                        <h1 style="color: #9dd4a8; margin: 0; font-size: 32px;">🌿 ${invoiceTitle}</h1>
-                        <p style="color: #8dd4b8; margin: 8px 0 0 0; font-size: 14px;">Time Tracker Invoice</p>
-                    </div>
-
-                    <div style="margin-bottom: 30px; background: #242438; padding: 20px; border-radius: 8px; border-left: 4px solid #5a8b7a;">
-                        <h2 style="color: #9dd4a8; margin: 0 0 12px 0; font-size: 18px;">Employee Details</h2>
-                        <p style="margin: 8px 0; color: #f0f0f0;"><span style="color: #8dd4b8;">Name:</span> ${user.firstName} ${user.lastName}</p>
-                        <p style="margin: 8px 0; color: #f0f0f0;"><span style="color: #8dd4b8;">Email:</span> ${email}</p>
-                        <p style="margin: 8px 0; color: #f0f0f0;"><span style="color: #8dd4b8;">Hourly Rate:</span> <span style="color: #9dd4a8;">$${rate.toFixed(2)}/hour</span></p>
-                        <p style="margin: 8px 0; color: #f0f0f0;"><span style="color: #8dd4b8;">Invoice Date:</span> ${invoiceDate}</p>
-                    </div>
-
-                    ${invoiceDescription ? `
-                    <div style="margin-bottom: 30px; background: #242438; padding: 15px; border-radius: 8px; border-left: 4px solid #5a8b7a;">
-                        <h3 style="color: #9dd4a8; margin: 0 0 8px 0; font-size: 16px;">Description</h3>
-                        <p style="margin: 0; color: #b0b0b0; white-space: pre-wrap; line-height: 1.6;">${invoiceDescription}</p>
-                    </div>
-                    ` : ''}
-
-                    <div style="margin-bottom: 30px;">
-                        <h2 style="color: #9dd4a8; margin: 0 0 12px 0; font-size: 18px; border-bottom: 2px solid #5a8b7a; padding-bottom: 8px;">Project Breakdown</h2>
-                        <table style="width: 100%; border-collapse: collapse;">
-                            <thead>
-                                <tr style="background: #242438; border: 1px solid #5a8b7a;">
-                                    <th style="padding: 12px; text-align: left; color: #9dd4a8; font-weight: bold;">Project</th>
-                                    <th style="padding: 12px; text-align: right; color: #9dd4a8; font-weight: bold;">Hours</th>
-                                    <th style="padding: 12px; text-align: right; color: #9dd4a8; font-weight: bold;">Amount</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${Object.entries(projectBreakdown).map(([proj, hours]) => `
-                                    <tr style="border: 1px solid #2d2d44; background: #1f1f32;">
-                                        <td style="padding: 12px; color: #f0f0f0;">${proj}</td>
-                                        <td style="padding: 12px; text-align: right; color: #8dd4b8;">${hours.toFixed(2)}</td>
-                                        <td style="padding: 12px; text-align: right; color: #9dd4a8;">$${(hours * rate).toFixed(2)}</td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div style="margin-bottom: 30px;">
-                        <h2 style="color: #9dd4a8; margin: 0 0 12px 0; font-size: 18px; border-bottom: 2px solid #5a8b7a; padding-bottom: 8px;">Time Entry Details</h2>
-                        <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
-                            <thead>
-                                <tr style="background: #242438; border: 1px solid #5a8b7a;">
-                                    <th style="padding: 10px; text-align: left; color: #9dd4a8; font-weight: bold;">Date</th>
-                                    <th style="padding: 10px; text-align: left; color: #9dd4a8; font-weight: bold;">Time In</th>
-                                    <th style="padding: 10px; text-align: left; color: #9dd4a8; font-weight: bold;">Time Out</th>
-                                    <th style="padding: 10px; text-align: right; color: #9dd4a8; font-weight: bold;">Hours</th>
-                                    <th style="padding: 10px; text-align: left; color: #9dd4a8; font-weight: bold;">Project</th>
-                                    <th style="padding: 10px; text-align: left; color: #9dd4a8; font-weight: bold;">Task</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${entries.map(entry => `
-                                    <tr style="border: 1px solid #2d2d44; background: #1f1f32;">
-                                        <td style="padding: 10px; color: #8dd4b8;">${formatDate(entry.clockIn)}</td>
-                                        <td style="padding: 10px; color: #f0f0f0;">${formatTime(entry.clockIn)}</td>
-                                        <td style="padding: 10px; color: #f0f0f0;">${formatTime(entry.clockOut)}</td>
-                                        <td style="padding: 10px; text-align: right; color: #9dd4a8;">${calculateHours(entry)}</td>
-                                        <td style="padding: 10px; color: #f0f0f0;">${entry.project || '-'}</td>
-                                        <td style="padding: 10px; color: #b0b0b0;">${entry.task || '-'}</td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div style="background: #242438; padding: 20px; border-radius: 8px; border: 2px solid #5a8b7a; margin-bottom: 30px;">
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 16px;">
-                            <span style="color: #9dd4a8; font-weight: bold;">Total Hours:</span>
-                            <span style="color: #8dd4b8; font-weight: bold;">${totalHours.toFixed(2)}</span>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; font-size: 20px;">
-                            <span style="color: #9dd4a8; font-weight: bold;">Total Amount Due:</span>
-                            <span style="color: #9dd4a8; font-weight: bold;">$${totalAmount.toFixed(2)}</span>
-                        </div>
-                    </div>
-
-                    <div style="margin-top: 40px; text-align: center; color: #888; font-size: 12px; border-top: 1px solid #2d2d44; padding-top: 20px;">
-                        <p style="margin: 0;">Generated by Time Tracker Pro • ${invoiceDate}</p>
-                        <p style="margin: 8px 0 0 0; color: #8dd4b8;">Thank you for your work!</p>
-                    </div>
-                </div>
-            `;
+            // Apply date filtering
+            if (invoiceStartDate || invoiceEndDate) {
+                const startDate = invoiceStartDate ? new Date(invoiceStartDate) : null;
+                const endDate = invoiceEndDate ? new Date(invoiceEndDate) : null;
+                entries = entries.filter(e => {
+                    const entryDate = new Date(e.clockIn);
+                    if (startDate && entryDate < startDate) return false;
+                    if (endDate) {
+                        endDate.setHours(23, 59, 59);
+                        if (entryDate > endDate) return false;
+                    }
+                    return true;
+                });
+            }
 
             try {
-                // Add element to DOM temporarily for html2canvas to work
-                const tempContainer = document.createElement('div');
-                tempContainer.style.position = 'fixed';
-                tempContainer.style.left = '-9999px';
-                tempContainer.style.top = '-9999px';
-                tempContainer.appendChild(invoiceElement);
-                document.body.appendChild(tempContainer);
+                let totalHours = 0;
+                const projectBreakdown = {};
 
-                const canvas = await html2canvas(invoiceElement, {
-                    backgroundColor: '#1a1a2e',
-                    scale: 2,
-                    useCORS: true,
-                    logging: false
+                entries.forEach(entry => {
+                    const hours = parseFloat(calculateHours(entry));
+                    totalHours += hours;
+                    const proj = entry.project || 'Other';
+                    projectBreakdown[proj] = (projectBreakdown[proj] || 0) + hours;
                 });
 
-                // Remove temp container
-                document.body.removeChild(tempContainer);
+                const totalAmount = totalHours * rate;
+                const invoiceDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+                const empId = String(user.employeeId).padStart(5, '0');
 
-                const imgData = canvas.toDataURL('image/png');
                 const pdf = new jsPDF('p', 'mm', 'a4');
-                const imgWidth = 190;
-                const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                let yPos = 20;
 
-                pdf.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight);
+                // Title
+                pdf.setFontSize(24);
+                pdf.setTextColor(157, 212, 168);
+                pdf.text('🌿 ' + invoiceTitle, 20, yPos);
+                yPos += 12;
+
+                pdf.setFontSize(10);
+                pdf.setTextColor(141, 212, 184);
+                pdf.text('Time Tracker Invoice', 20, yPos);
+                yPos += 15;
+
+                // Employee Details
+                pdf.setFontSize(12);
+                pdf.setTextColor(157, 212, 168);
+                pdf.text('Employee Details', 20, yPos);
+                yPos += 10;
+
+                pdf.setFontSize(10);
+                pdf.setTextColor(240, 240, 240);
+                pdf.text(`Name: ${user.firstName} ${user.lastName}`, 20, yPos);
+                yPos += 7;
+                pdf.text(`Employee ID: EMP #${empId}`, 20, yPos);
+                yPos += 7;
+                pdf.text(`Email: ${email}`, 20, yPos);
+                yPos += 7;
+                pdf.text(`Hourly Rate: $${rate.toFixed(2)}/hour`, 20, yPos);
+                yPos += 7;
+                pdf.text(`Invoice Date: ${invoiceDate}`, 20, yPos);
+                yPos += 12;
+
+                // Description if provided
+                if (invoiceDescription) {
+                    pdf.setFontSize(12);
+                    pdf.setTextColor(157, 212, 168);
+                    pdf.text('Description', 20, yPos);
+                    yPos += 8;
+                    pdf.setFontSize(10);
+                    pdf.setTextColor(176, 176, 176);
+                    const descLines = pdf.splitTextToSize(invoiceDescription, 170);
+                    descLines.forEach(line => {
+                        pdf.text(line, 20, yPos);
+                        yPos += 6;
+                    });
+                    yPos += 5;
+                }
+
+                // Project Breakdown
+                pdf.setFontSize(12);
+                pdf.setTextColor(157, 212, 168);
+                pdf.text('Project Breakdown', 20, yPos);
+                yPos += 10;
+
+                // Table header
+                pdf.setFontSize(10);
+                pdf.setTextColor(157, 212, 168);
+                pdf.text('Project', 20, yPos);
+                pdf.text('Hours', 140, yPos, { align: 'right' });
+                pdf.text('Amount', 190, yPos, { align: 'right' });
+                yPos += 7;
+
+                // Table rows
+                pdf.setTextColor(240, 240, 240);
+                Object.entries(projectBreakdown).forEach(([proj, hours]) => {
+                    const amount = (hours * rate).toFixed(2);
+                    pdf.text(proj.substring(0, 40), 20, yPos);
+                    pdf.text(hours.toFixed(2), 140, yPos, { align: 'right' });
+                    pdf.text('$' + amount, 190, yPos, { align: 'right' });
+                    yPos += 7;
+                });
+                yPos += 5;
+
+                // Time Entries Table
+                pdf.setFontSize(12);
+                pdf.setTextColor(157, 212, 168);
+                pdf.text('Time Entry Details', 20, yPos);
+                yPos += 10;
+
+                pdf.setFontSize(9);
+                pdf.setTextColor(157, 212, 168);
+                pdf.text('Date', 20, yPos);
+                pdf.text('In', 50, yPos);
+                pdf.text('Out', 80, yPos);
+                pdf.text('Hours', 110, yPos, { align: 'right' });
+                pdf.text('Project', 130, yPos);
+                pdf.text('Task', 160, yPos);
+                yPos += 7;
+
+                pdf.setTextColor(240, 240, 240);
+                entries.forEach(entry => {
+                    const hours = calculateHours(entry);
+                    const date = formatDate(entry.clockIn);
+                    const timeIn = formatTime(entry.clockIn);
+                    const timeOut = formatTime(entry.clockOut);
+                    const proj = (entry.project || '-').substring(0, 15);
+                    const task = (entry.task || '-').substring(0, 15);
+
+                    pdf.text(date, 20, yPos);
+                    pdf.text(timeIn, 50, yPos);
+                    pdf.text(timeOut, 80, yPos);
+                    pdf.text(hours, 110, yPos, { align: 'right' });
+                    pdf.text(proj, 130, yPos);
+                    pdf.text(task, 160, yPos);
+                    yPos += 6;
+
+                    if (yPos > 270) {
+                        pdf.addPage();
+                        yPos = 20;
+                    }
+                });
+
+                yPos += 10;
+
+                // Totals
+                pdf.setFontSize(12);
+                pdf.setTextColor(157, 212, 168);
+                pdf.text(`Total Hours: ${totalHours.toFixed(2)}`, 20, yPos);
+                yPos += 10;
+                pdf.text(`Total Amount Due: $${totalAmount.toFixed(2)}`, 20, yPos);
+
                 pdf.save(`invoice-${user.firstName}-${user.lastName}-${new Date().toISOString().split('T')[0]}.pdf`);
-
                 closeInvoiceModal();
                 alert('Invoice PDF downloaded successfully!');
             } catch (error) {
                 console.error('Error generating PDF:', error);
-                alert('Error generating PDF: ' + error.message);
+                alert('Error generating PDF. Please check browser console for details.');
             }
         }
 
