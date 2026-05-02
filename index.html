@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌿 Time Tracker Pro</title>
+    <style>
+        :root {
+            --bg-primary: linear-gradient(135deg, #f8f5f0 0%, #fef8f3 100%);
+            --bg-card: #ffffff;
+            --bg-entry: #f8f5f0;
+            --text-primary: #1a1a1a;
+            --text-secondary: #666;
+            --text-tertiary: #999;
+            --border-color: rgba(168, 213, 186, 0.3);
+            --label-color: #3B6D11;
+            --header-gradient: linear-gradient(135deg, #a8d5ba 0%, #d4b5f0 100%);
+            --input-border: #f4c0d1;
+            --entry-border: #a8d5ba;
+            --entry-text: #a8d5ba;
+        }
+
+        html.dark-mode {
+            --bg-primary: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            --bg-card: #2d2d44;
+            --bg-entry: #242438;
+            --text-primary: #f0f0f0;
+            --text-secondary: #b0b0b0;
+            --text-tertiary: #888;
+            --border-color: rgba(168, 213, 186, 0.2);
+            --label-color: #9dd4a8;
+            --header-gradient: linear-gradient(135deg, #2d5a3d 0%, #4a3a7a 100%);
+            --input-border: #5a3a6a;
+            --entry-border: #5a8b7a;
+            --entry-text: #8dd4b8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-primary);
+            min-height: 100vh;
+            color: var(--text-primary);
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .container {
+            min-height: 100vh;
+        }
+
+        .header {
+            background: var(--header-gradient);
+            padding: 20px 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            border-bottom: 2px solid #f4c0d1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .header h1 {
+            color: #fff;
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+            margin: 0;
+        }
+
+        #darkModeToggle {
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        #darkModeToggle:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .content {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border-color);
+            margin-bottom: 16px;
+            transition: background-color 0.3s ease;
+        }
+
+        .card h2 {
+            color: var(--label-color);
+            margin-top: 0;
+            margin-bottom: 16px;
+        }
+
+        .card h3 {
+            color: #c79db5;
+            margin: 0 0 12px 0;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--label-color);
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        input[type="email"],
+        input[type="text"],
+        input[type="password"],
+        input[type="number"],
+        input[type="datetime-local"],
+        textarea {
+            padding: 12px 16px;
+            border-radius: 10px;
+            border: 2px solid var(--input-border);
+            font-size: 14px;
+            font-family: inherit;
+            width: 100%;
+            box-sizing: border-box;
+            background: var(--bg-card);
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+
+        input:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #a8d5ba !important;
+            box-shadow: 0 0 0 3px rgba(168, 213, 186, 0.1);
+        }
+
+        .button {
+            padding: 12px 20px;
+            border-radius: 12px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(168, 213, 186, 0.3);
+        }
+
+        .button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .button-primary {
+            background: linear-gradient(135deg, #a8d5ba 0%, #7dd3c0 100%);
+            color: #fff;
+        }
+
+        .button-secondary {
+            background: #f4c0d1;
+            color: #993556;
+        }
+
+        .button-logout {
+            background: rgba(255,255,255,0.2);
+            color: #fff;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .full-width {
+            width: 100%;
+        }
+
+        .time-entry {
+            background: var(--bg-entry);
+            border-left: 4px solid var(--entry-border);
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            transition: background-color 0.3s ease;
+        }
+
+        .time-entry p {
+            margin: 4px 0;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .entry-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--label-color);
+        }
+
+        .entry-time {
+            color: var(--entry-text);
+            font-weight: 600;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .tab-button {
+            padding: 10px 16px;
+            border-radius: 8px;
+            border: none;
+            background: #ccc;
+            color: #333;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tab-button.active {
+            background: #a8d5ba;
+            color: #fff;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            color: var(--label-color);
+            font-weight: 500;
+        }
+
+        input[type="checkbox"] {
+            cursor: pointer;
+            accent-color: #a8d5ba;
+        }
+
+        .invoice-item {
+            background: var(--bg-entry);
+            border-left: 4px solid var(--entry-border);
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background-color 0.3s ease;
+        }
+
+        .invoice-details p {
+            margin: 0;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .invoice-details p:first-child {
+            font-weight: 600;
+            color: var(--label-color);
+        }
+
+        .invoice-details .amount {
+            font-weight: 600;
+            color: var(--label-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-content">
+                <div>
+                    <h1>🌿 Time Tracker Pro</h1>
+                    <p>Cute & mindful time management</p>
+                </div>
+                <button id="darkModeToggle" class="button">🌙 Dark Mode</button>
+            </div>
+            <button id="logoutBtn" class="button button-logout hidden">Logout</button>
+        </div>
+
+        <div class="content">
+            <!-- LOGIN VIEW -->
+            <div id="loginView">
+                <div class="card">
+                    <h2>👤 Employee Login</h2>
+                    <form id="employeeLoginForm">
+                        <div class="form-group">
+                            <label class="label">Email Address</label>
+                            <input type="email" id="loginEmail" placeholder="your@email.com" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="label">Password</label>
+                            <input type="password" id="loginPassword" placeholder="Enter your password" required>
+                        </div>
+                        <button type="submit" class="button button-primary full-width">Login</button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h2>✨ New Employee? Sign Up</h2>
+                    <form id="employeeSignupForm">
+                        <div class="form-group">
+                            <label class="label">First Name</label>
+                            <input type="text" id="signupFirstName" placeholder="John" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="label">Last Name</label>
+                            <input type="text" id="signupLastName" placeholder="Doe" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="label">Email Address</label>
+                            <input type="email" id="signupEmail" placeholder="your@email.com" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="label">Password</label>
+                            <input type="password" id="signupPassword" placeholder="Create a password" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="label">Confirm Password</label>
+                            <input type="password" id="signupPasswordConfirm" placeholder="Confirm password" required>
+                        </div>
+                        <button type="submit" class="button button-secondary full-width">Sign Up</button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h2>🔐 Admin Login</h2>
+                    <form id="adminLoginForm">
+                        <div class="form-group">
+                            <label class="label">Admin Password</label>
+                            <input type="password" id="adminPassword" placeholder="Enter password" required>
+                        </div>
+                        <button type="submit" class="button button-primary full-width">Admin Access</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- EMPLOYEE DASHBOARD VIEW -->
+            <div id="dashboardView" class="hidden">
+                <div class="card">
+                    <h2>⏱️ Clock In/Out</h2>
+                    <div class="grid-2">
+                        <button id="clockInBtn" class="button button-primary">✓ Clock In</button>
+                        <button id="clockOutBtn" class="button button-secondary" disabled>✕ Clock Out</button>
+                    </div>
+                    <p id="clockedInStatus" style="color: #3B6D11; font-size: 14px; margin-top: 16px; display: none;"></p>
+                </div>
+
+                <div class="card">
+                    <h2>📋 Project & Task</h2>
+                    <div class="form-group">
+                        <label class="label">Project Name</label>
+                        <input type="text" id="projectInput" placeholder="e.g., Website Redesign">
+                    </div>
+                    <div class="form-group">
+                        <label class="label">Task Details</label>
+                        <input type="text" id="taskInput" placeholder="e.g., Design homepage mockups">
+                    </div>
+                </div>
+
+                <div id="manualEntryCard" class="card hidden">
+                    <h2>📝 Manual Time Entry</h2>
+                    <form id="manualEntryForm">
+                        <div class="form-group">
+                            <label class="label">Time Worked</label>
+                            <input type="datetime-local" id="manualTime" required>
+                        </div>
+                        <button type="submit" class="button button-primary full-width">Add Manual Entry</button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h2>📊 Your Time Entries</h2>
+                    <div id="employeeTimeEntries">
+                        <p style="color: #888; font-size: 14px;">No time entries yet</p>
+                    </div>
+                    <button id="downloadSummaryBtn" class="button button-primary full-width" style="margin-top: 16px;">📥 Download Time Summary</button>
+                </div>
+            </div>
+
+            <!-- ADMIN VIEW -->
+            <div id="adminView" class="hidden">
+                <div class="tabs">
+                    <button class="tab-button active" onclick="switchAdminTab('settings')">⚙️ Settings</button>
+                    <button class="tab-button" onclick="switchAdminTab('employees')">👥 Employees & Rates</button>
+                    <button class="tab-button" onclick="switchAdminTab('entries')">📊 All Entries</button>
+                    <button class="tab-button" onclick="switchAdminTab('invoices')">📄 Invoices</button>
+                </div>
+
+                <!-- Settings Tab -->
+                <div id="settingsTab" class="card">
+                    <h2>⚙️ Settings</h2>
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="allowAutoClocking" checked>
+                            Allow Auto Clock In/Out
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="allowManualEntry">
+                            Allow Manual Time Entry
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Employees Tab -->
+                <div id="employeesTab" class="card hidden">
+                    <h2>👥 Employees & Hourly Rates</h2>
+                    <div id="employeeRatesList"></div>
+                </div>
+
+                <!-- Entries Tab -->
+                <div id="entriesTab" class="card hidden">
+                    <h2>📊 All Time Entries</h2>
+                    <div id="allTimeEntriesList"></div>
+                </div>
+
+                <!-- Invoices Tab -->
+                <div id="invoicesTab" class="card hidden">
+                    <h2>📄 Generate Invoices</h2>
+                    <div id="invoicesList"></div>
+                </div>
+
+                <!-- Edit Entry Form -->
+                <div id="editEntryCard" class="card hidden" style="background: #fffaf5; border-left: 4px solid #f4c0d1;">
+                    <h3>✏️ Edit Hours</h3>
+                    <div class="form-group">
+                        <label class="label">Hours Worked</label>
+                        <input type="number" id="editedHours" step="0.01" min="0" placeholder="0.00">
+                    </div>
+                    <div class="grid-2">
+                        <button id="saveEditBtn" class="button button-primary">Save Changes</button>
+                        <button id="cancelEditBtn" class="button button-secondary">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data Management
+        const state = {
+            currentUser: null,
+            userRole: null,
+            users: [],
+            timeEntries: [],
+            employeeRates: {},
+            settings: { allowManualEntry: false, allowAutoClocking: true },
+            clockedIn: false,
+            clockInTime: null,
+            editingEntry: null
+        };
+
+        // Load data from localStorage
+        function loadData() {
+            const saved = JSON.parse(localStorage.getItem('timeTrackerData') || '{}');
+            if (saved.users) state.users = saved.users;
+            if (saved.timeEntries) state.timeEntries = saved.timeEntries;
+            if (saved.settings) state.settings = saved.settings;
+            if (saved.employeeRates) state.employeeRates = saved.employeeRates;
+        }
+
+        // Save data to localStorage
+        function saveData() {
+            localStorage.setItem('timeTrackerData', JSON.stringify({
+                users: state.users,
+                timeEntries: state.timeEntries,
+                settings: state.settings,
+                employeeRates: state.employeeRates
+            }));
+        }
+
+        // Utility Functions
+        function formatTime(date) {
+            if (!date) return '';
+            return new Date(date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+        }
+
+        function formatDate(date) {
+            if (!date) return '';
+            return new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        }
+
+        function calculateHours(entry) {
+            return ((new Date(entry.clockOut) - new Date(entry.clockIn)) / (1000 * 60 * 60)).toFixed(2);
+        }
+
+        // View Management
+        function showView(viewName) {
+            document.getElementById('loginView').classList.add('hidden');
+            document.getElementById('dashboardView').classList.add('hidden');
+            document.getElementById('adminView').classList.add('hidden');
+
+            if (viewName === 'login') {
+                document.getElementById('loginView').classList.remove('hidden');
+                document.getElementById('logoutBtn').classList.add('hidden');
+            } else if (viewName === 'dashboard') {
+                document.getElementById('dashboardView').classList.remove('hidden');
+                document.getElementById('logoutBtn').classList.remove('hidden');
+            } else if (viewName === 'admin') {
+                document.getElementById('adminView').classList.remove('hidden');
+                document.getElementById('logoutBtn').classList.remove('hidden');
+            }
+        }
+
+        // Employee Login
+        document.getElementById('employeeLoginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const user = state.users.find(u => u.email === email);
+            if (user && user.password === password) {
+                state.currentUser = email;
+                state.userRole = 'employee';
+                state.clockedIn = state.timeEntries.some(t => t.email === email && !t.clockOut);
+                document.getElementById('loginEmail').value = '';
+                document.getElementById('loginPassword').value = '';
+                showView('dashboard');
+                renderDashboard();
+            } else if (user) {
+                alert('Incorrect password.');
+            } else {
+                alert('User not found. Please sign up first.');
+            }
+        });
+
+        // Employee Signup
+        document.getElementById('employeeSignupForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const firstName = document.getElementById('signupFirstName').value;
+            const lastName = document.getElementById('signupLastName').value;
+            const email = document.getElementById('signupEmail').value;
+            const password = document.getElementById('signupPassword').value;
+            const passwordConfirm = document.getElementById('signupPasswordConfirm').value;
+
+            if (password !== passwordConfirm) {
+                alert('Passwords do not match');
+                return;
+            }
+
+            if (password.length < 6) {
+                alert('Password must be at least 6 characters long');
+                return;
+            }
+
+            if (state.users.some(u => u.email === email)) {
+                alert('Email already registered');
+                return;
+            }
+
+            state.users.push({
+                email: email,
+                firstName: firstName,
+                lastName: lastName,
+                password: password,
+                id: Date.now()
+            });
+            state.employeeRates[email] = 0;
+            saveData();
+            document.getElementById('signupFirstName').value = '';
+            document.getElementById('signupLastName').value = '';
+            document.getElementById('signupEmail').value = '';
+            document.getElementById('signupPassword').value = '';
+            document.getElementById('signupPasswordConfirm').value = '';
+            alert('Signup successful! You can now log in.');
+        });
+
+        // Admin Login
+        document.getElementById('adminLoginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const password = document.getElementById('adminPassword').value;
+            if (password === 'admin123') {
+                state.currentUser = 'admin';
+                state.userRole = 'admin';
+                document.getElementById('adminPassword').value = '';
+                showView('admin');
+                renderAdmin();
+            } else {
+                alert('Incorrect admin password');
+            }
+        });
+
+        // Logout
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            state.currentUser = null;
+            state.userRole = null;
+            state.clockedIn = false;
+            state.clockInTime = null;
+            showView('login');
+        });
+
+        // Clock In
+        document.getElementById('clockInBtn').addEventListener('click', function() {
+            if (!state.settings.allowAutoClocking) {
+                alert('Clocking is disabled');
+                return;
+            }
+            state.clockedIn = true;
+            state.clockInTime = new Date();
+            document.getElementById('clockOutBtn').disabled = false;
+            document.getElementById('clockInBtn').disabled = true;
+            const statusEl = document.getElementById('clockedInStatus');
+            statusEl.textContent = '⏳ Clocked in since ' + formatTime(state.clockInTime);
+            statusEl.style.display = 'block';
+        });
+
+        // Clock Out
+        document.getElementById('clockOutBtn').addEventListener('click', function() {
+            if (state.clockInTime) {
+                const project = document.getElementById('projectInput').value;
+                const task = document.getElementById('taskInput').value;
+                state.timeEntries.push({
+                    email: state.currentUser,
+                    clockIn: state.clockInTime,
+                    clockOut: new Date(),
+                    project: project,
+                    task: task,
+                    id: Date.now()
+                });
+                saveData();
+                state.clockedIn = false;
+                state.clockInTime = null;
+                document.getElementById('projectInput').value = '';
+                document.getElementById('taskInput').value = '';
+                document.getElementById('clockOutBtn').disabled = true;
+                document.getElementById('clockInBtn').disabled = false;
+                document.getElementById('clockedInStatus').style.display = 'none';
+                alert('Clocked out successfully!');
+                renderDashboard();
+            }
+        });
+
+        // Manual Entry
+        document.getElementById('manualEntryForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const manualTime = document.getElementById('manualTime').value;
+            const project = document.getElementById('projectInput').value;
+            const task = document.getElementById('taskInput').value;
+            if (!manualTime) return;
+            state.timeEntries.push({
+                email: state.currentUser,
+                clockIn: new Date(manualTime),
+                clockOut: new Date(new Date(manualTime).getTime() + 3600000),
+                project: project,
+                task: task,
+                id: Date.now(),
+                isManual: true
+            });
+            saveData();
+            document.getElementById('manualTime').value = '';
+            document.getElementById('projectInput').value = '';
+            document.getElementById('taskInput').value = '';
+            alert('Time entry saved!');
+            renderDashboard();
+        });
+
+        // Download Time Summary
+        document.getElementById('downloadSummaryBtn').addEventListener('click', function() {
+            const entries = state.timeEntries.filter(t => t.email === state.currentUser);
+            let content = `TIME SUMMARY REPORT\nEmployee: ${state.currentUser}\nGenerated: ${new Date().toLocaleDateString()}\n\n=====================================\n\n`;
+            let totalHours = 0;
+            entries.forEach(entry => {
+                const hours = calculateHours(entry);
+                totalHours += parseFloat(hours);
+                content += `Date: ${formatDate(entry.clockIn)}\nTime: ${formatTime(entry.clockIn)} - ${formatTime(entry.clockOut)}\nHours: ${hours}\nProject: ${entry.project || 'N/A'}\nTask: ${entry.task || 'N/A'}\n---\n\n`;
+            });
+            content += `=====================================\nTOTAL HOURS: ${totalHours.toFixed(2)}\n`;
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${state.currentUser}-time-summary-${new Date().toISOString().split('T')[0]}.txt`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+        });
+
+        // Render Dashboard
+        function renderDashboard() {
+            const entries = state.timeEntries.filter(t => t.email === state.currentUser);
+            const manualEntryCard = document.getElementById('manualEntryCard');
+
+            if (state.settings.allowManualEntry) {
+                manualEntryCard.classList.remove('hidden');
+            } else {
+                manualEntryCard.classList.add('hidden');
+            }
+
+            let html = '';
+            if (entries.length === 0) {
+                html = '<p style="color: #888; font-size: 14px;">No time entries yet</p>';
+            } else {
+                entries.forEach(entry => {
+                    html += `
+                        <div class="time-entry">
+                            <div class="entry-header">
+                                <span>${formatDate(entry.clockIn)}</span>
+                                <span class="entry-time">${formatTime(entry.clockIn)} - ${formatTime(entry.clockOut)} (${calculateHours(entry)}h)</span>
+                            </div>
+                            <p style="color: #555;">📁 ${entry.project || 'No project'}</p>
+                            <p style="color: #777;">✓ ${entry.task || 'No task details'}</p>
+                        </div>
+                    `;
+                });
+            }
+            document.getElementById('employeeTimeEntries').innerHTML = html;
+
+            if (state.clockedIn) {
+                document.getElementById('clockOutBtn').disabled = false;
+                document.getElementById('clockInBtn').disabled = true;
+            } else {
+                document.getElementById('clockOutBtn').disabled = true;
+                document.getElementById('clockInBtn').disabled = false;
+            }
+        }
+
+        // Admin Tab Switching
+        function switchAdminTab(tab) {
+            document.querySelectorAll('#adminView .card').forEach(card => card.classList.add('hidden'));
+            document.querySelectorAll('#adminView .tab-button').forEach(btn => btn.classList.remove('active'));
+
+            if (tab === 'settings') {
+                document.getElementById('settingsTab').classList.remove('hidden');
+            } else if (tab === 'employees') {
+                document.getElementById('employeesTab').classList.remove('hidden');
+            } else if (tab === 'entries') {
+                document.getElementById('entriesTab').classList.remove('hidden');
+            } else if (tab === 'invoices') {
+                document.getElementById('invoicesTab').classList.remove('hidden');
+            }
+
+            event.target.classList.add('active');
+            renderAdmin();
+        }
+
+        // Render Admin
+        function renderAdmin() {
+            // Settings Tab
+            document.getElementById('allowAutoClocking').checked = state.settings.allowAutoClocking;
+            document.getElementById('allowManualEntry').checked = state.settings.allowManualEntry;
+
+            document.getElementById('allowAutoClocking').addEventListener('change', function() {
+                state.settings.allowAutoClocking = this.checked;
+                saveData();
+            });
+
+            document.getElementById('allowManualEntry').addEventListener('change', function() {
+                state.settings.allowManualEntry = this.checked;
+                saveData();
+            });
+
+            // Employees Tab
+            let employeeHtml = '';
+            if (state.users.length === 0) {
+                employeeHtml = '<p style="color: #888; font-size: 14px;">No employees registered yet</p>';
+            } else {
+                state.users.forEach(user => {
+                    const rate = state.employeeRates[user.email] || 0;
+                    const fullName = `${user.firstName} ${user.lastName}`;
+                    employeeHtml += `
+                        <div class="time-entry" style="border-left-color: #f4c0d1;">
+                            <div style="display: flex; gap: 12px; align-items: center; margin-bottom: 8px;">
+                                <span style="font-weight: 600; color: #993556; flex: 1;">👤 ${fullName}</span>
+                                <span style="color: var(--text-tertiary); font-size: 12px;">📧 ${user.email}</span>
+                            </div>
+                            <div style="display: flex; gap: 8px; align-items: center;">
+                                <label style="color: var(--label-color); font-weight: 500; font-size: 13px; flex: 0;">Hourly Rate: $</label>
+                                <input type="number" class="employee-rate-input" data-email="${user.email}" value="${rate}" step="0.01" min="0" placeholder="0.00" style="flex: 0; width: 120px; padding: 8px;">
+                                <span style="color: var(--entry-text); font-weight: 600; font-size: 14px;">
+                                    ${rate ? `$${parseFloat(rate).toFixed(2)}/hr` : 'Not set'}
+                                </span>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            document.getElementById('employeeRatesList').innerHTML = employeeHtml;
+
+            document.querySelectorAll('.employee-rate-input').forEach(input => {
+                input.addEventListener('change', function() {
+                    const email = this.dataset.email;
+                    state.employeeRates[email] = parseFloat(this.value) || 0;
+                    saveData();
+                    renderAdmin();
+                });
+            });
+
+            // Entries Tab
+            let entriesHtml = '';
+            if (state.timeEntries.length === 0) {
+                entriesHtml = '<p style="color: #888; font-size: 14px;">No time entries recorded</p>';
+            } else {
+                state.timeEntries.forEach(entry => {
+                    entriesHtml += `
+                        <div class="time-entry">
+                            <div class="entry-header">
+                                <span>${entry.email}</span>
+                                <span class="entry-time">${formatDate(entry.clockIn)} ${formatTime(entry.clockIn)} - ${formatTime(entry.clockOut)} (${calculateHours(entry)}h)</span>
+                            </div>
+                            <p style="color: #555;">📁 ${entry.project || 'No project'}</p>
+                            <p style="color: #777; margin-bottom: 8px;">✓ ${entry.task || 'No task details'}</p>
+                            <button class="button button-secondary" style="font-size: 12px; padding: 8px 12px;" onclick="startEditEntry(${entry.id})">✏️ Edit Hours</button>
+                        </div>
+                    `;
+                });
+            }
+            document.getElementById('allTimeEntriesList').innerHTML = entriesHtml;
+
+            // Invoices Tab
+            let invoicesHtml = '';
+            state.users.forEach(user => {
+                const userEntries = state.timeEntries.filter(t => t.email === user.email);
+                if (userEntries.length === 0) return;
+
+                let totalHours = 0;
+                userEntries.forEach(e => totalHours += parseFloat(calculateHours(e)));
+                const rate = state.employeeRates[user.email] || 0;
+                const totalAmount = totalHours * rate;
+
+                invoicesHtml += `
+                    <div class="invoice-item">
+                        <div class="invoice-details">
+                            <p>${user.email}</p>
+                            <p style="color: #666;">Total: ${totalHours.toFixed(2)}h @ $${rate.toFixed(2)}/hr = <span class="amount">$${totalAmount.toFixed(2)}</span></p>
+                        </div>
+                        <button class="button button-primary" onclick="generateInvoice('${user.email}')">📥 Download Invoice</button>
+                    </div>
+                `;
+            });
+
+            if (invoicesHtml === '') {
+                invoicesHtml = '<p style="color: #888; font-size: 14px;">No employees with time entries yet</p>';
+            }
+            document.getElementById('invoicesList').innerHTML = invoicesHtml;
+        }
+
+        // Edit Entry
+        function startEditEntry(entryId) {
+            state.editingEntry = state.timeEntries.find(e => e.id === entryId);
+            if (state.editingEntry) {
+                const hours = calculateHours(state.editingEntry);
+                document.getElementById('editedHours').value = hours;
+                document.getElementById('editEntryCard').classList.remove('hidden');
+            }
+        }
+
+        document.getElementById('saveEditBtn').addEventListener('click', function() {
+            if (state.editingEntry && document.getElementById('editedHours').value) {
+                const newHours = parseFloat(document.getElementById('editedHours').value);
+                const clockOut = new Date(new Date(state.editingEntry.clockIn).getTime() + newHours * 60 * 60 * 1000);
+                state.editingEntry.clockOut = clockOut;
+                saveData();
+                state.editingEntry = null;
+                document.getElementById('editEntryCard').classList.add('hidden');
+                document.getElementById('editedHours').value = '';
+                alert('Entry updated!');
+                renderAdmin();
+            }
+        });
+
+        document.getElementById('cancelEditBtn').addEventListener('click', function() {
+            state.editingEntry = null;
+            document.getElementById('editEntryCard').classList.add('hidden');
+            document.getElementById('editedHours').value = '';
+        });
+
+        // Generate Invoice
+        function generateInvoice(email) {
+            const entries = state.timeEntries.filter(t => t.email === email);
+            const rate = state.employeeRates[email] || 0;
+            let totalHours = 0;
+            let invoiceContent = `INVOICE\n\n===========================================\nEMPLOYEE: ${email}\nHOURLY RATE: $${rate.toFixed(2)}\nDATE: ${new Date().toLocaleDateString()}\n===========================================\n\n`;
+
+            const projectBreakdown = {};
+            entries.forEach(entry => {
+                const hours = parseFloat(calculateHours(entry));
+                totalHours += hours;
+                const proj = entry.project || 'Other';
+                projectBreakdown[proj] = (projectBreakdown[proj] || 0) + hours;
+            });
+
+            invoiceContent += `PROJECT BREAKDOWN:\n`;
+            Object.entries(projectBreakdown).forEach(([proj, hours]) => {
+                const amount = (hours * rate).toFixed(2);
+                invoiceContent += `${proj}: ${hours.toFixed(2)} hours @ $${rate.toFixed(2)}/hr = $${amount}\n`;
+            });
+
+            invoiceContent += `\n===========================================\nTOTAL HOURS: ${totalHours.toFixed(2)}\nTOTAL AMOUNT DUE: $${(totalHours * rate).toFixed(2)}\n===========================================\n\n\nDETAILED ENTRIES:\n---\n`;
+
+            entries.forEach(entry => {
+                const hours = calculateHours(entry);
+                invoiceContent += `${formatDate(entry.clockIn)} | ${formatTime(entry.clockIn)} - ${formatTime(entry.clockOut)} | ${hours}h | Project: ${entry.project || 'N/A'} | Task: ${entry.task || 'N/A'}\n`;
+            });
+
+            const blob = new Blob([invoiceContent], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `invoice-${email}-${new Date().toISOString().split('T')[0]}.txt`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+
+        // Dark Mode Toggle
+        const darkModeToggle = document.getElementById('darkModeToggle');
+
+        // Load dark mode preference
+        function loadDarkMode() {
+            const isDarkMode = localStorage.getItem('darkMode') === 'true';
+            if (isDarkMode) {
+                document.documentElement.classList.add('dark-mode');
+                updateDarkModeButton(true);
+            }
+        }
+
+        function updateDarkModeButton(isDark) {
+            if (isDark) {
+                darkModeToggle.textContent = '☀️ Light Mode';
+            } else {
+                darkModeToggle.textContent = '🌙 Dark Mode';
+            }
+        }
+
+        darkModeToggle.addEventListener('click', function() {
+            const isDarkMode = document.documentElement.classList.toggle('dark-mode');
+            localStorage.setItem('darkMode', isDarkMode);
+            updateDarkModeButton(isDarkMode);
+        });
+
+        // Initialize
+        loadDarkMode();
+        loadData();
+        showView('login');
+    </script>
+</body>
+</html>
