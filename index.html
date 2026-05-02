@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🌿 Time Tracker Pro</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         :root {
             --bg-primary: linear-gradient(135deg, #f8f5f0 0%, #fef8f3 100%);
@@ -304,6 +305,47 @@
             font-weight: 600;
             color: var(--label-color);
         }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 24px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-close {
+            float: right;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+
+        @media print {
+            body {
+                background: white;
+            }
+        }
     </style>
 </head>
 <body>
@@ -384,7 +426,7 @@
                         <button id="clockInBtn" class="button button-primary">✓ Clock In</button>
                         <button id="clockOutBtn" class="button button-secondary" disabled>✕ Clock Out</button>
                     </div>
-                    <p id="clockedInStatus" style="color: #3B6D11; font-size: 14px; margin-top: 16px; display: none;"></p>
+                    <p id="clockedInStatus" style="color: var(--label-color); font-size: 14px; margin-top: 16px; display: none;"></p>
                 </div>
 
                 <div class="card">
@@ -479,6 +521,26 @@
         </div>
     </div>
 
+    <!-- Invoice Modal -->
+    <div id="invoiceModal" class="modal-overlay">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeInvoiceModal()">&times;</span>
+            <h3 style="color: var(--label-color); margin-bottom: 16px;">📄 Invoice Details</h3>
+            <div class="form-group">
+                <label class="label">Invoice Title (Optional)</label>
+                <input type="text" id="invoiceTitle" placeholder="e.g., Monthly Invoice - May 2024">
+            </div>
+            <div class="form-group">
+                <label class="label">Description (Optional)</label>
+                <textarea id="invoiceDescription" placeholder="Add any notes or description..." style="resize: vertical; min-height: 100px;"></textarea>
+            </div>
+            <div class="grid-2">
+                <button class="button button-primary" onclick="generateInvoicePDF()">📥 Download PDF</button>
+                <button class="button button-secondary" onclick="closeInvoiceModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Data Management
         const state = {
@@ -490,7 +552,9 @@
             settings: { allowManualEntry: false, allowAutoClocking: true },
             clockedIn: false,
             clockInTime: null,
-            editingEntry: null
+            editingEntry: null,
+            currentInvoiceEmployee: null,
+            currentInvoiceEntries: null
         };
 
         // Load data from localStorage
@@ -521,6 +585,11 @@
         function formatDate(date) {
             if (!date) return '';
             return new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        }
+
+        function formatDateTime(date) {
+            if (!date) return '';
+            return new Date(date).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true });
         }
 
         function calculateHours(entry) {
@@ -738,8 +807,8 @@
                                 <span>${formatDate(entry.clockIn)}</span>
                                 <span class="entry-time">${formatTime(entry.clockIn)} - ${formatTime(entry.clockOut)} (${calculateHours(entry)}h)</span>
                             </div>
-                            <p style="color: #555;">📁 ${entry.project || 'No project'}</p>
-                            <p style="color: #777;">✓ ${entry.task || 'No task details'}</p>
+                            <p style="color: var(--text-secondary);">📁 ${entry.project || 'No project'}</p>
+                            <p style="color: var(--text-tertiary);">✓ ${entry.task || 'No task details'}</p>
                         </div>
                     `;
                 });
@@ -838,8 +907,8 @@
                                 <span>${entry.email}</span>
                                 <span class="entry-time">${formatDate(entry.clockIn)} ${formatTime(entry.clockIn)} - ${formatTime(entry.clockOut)} (${calculateHours(entry)}h)</span>
                             </div>
-                            <p style="color: #555;">📁 ${entry.project || 'No project'}</p>
-                            <p style="color: #777; margin-bottom: 8px;">✓ ${entry.task || 'No task details'}</p>
+                            <p style="color: var(--text-secondary);">📁 ${entry.project || 'No project'}</p>
+                            <p style="color: var(--text-tertiary); margin-bottom: 8px;">✓ ${entry.task || 'No task details'}</p>
                             <button class="button button-secondary" style="font-size: 12px; padding: 8px 12px;" onclick="startEditEntry(${entry.id})">✏️ Edit Hours</button>
                         </div>
                     `;
@@ -861,10 +930,11 @@
                 invoicesHtml += `
                     <div class="invoice-item">
                         <div class="invoice-details">
-                            <p>${user.email}</p>
-                            <p style="color: #666;">Total: ${totalHours.toFixed(2)}h @ $${rate.toFixed(2)}/hr = <span class="amount">$${totalAmount.toFixed(2)}</span></p>
+                            <p>${user.firstName} ${user.lastName}</p>
+                            <p style="color: var(--text-tertiary);">📧 ${user.email}</p>
+                            <p style="color: var(--text-secondary);">Total: ${totalHours.toFixed(2)}h @ $${rate.toFixed(2)}/hr = <span class="amount">$${totalAmount.toFixed(2)}</span></p>
                         </div>
-                        <button class="button button-primary" onclick="generateInvoice('${user.email}')">📥 Download Invoice</button>
+                        <button class="button button-primary" onclick="openInvoiceModal('${user.email}')">📥 PDF Invoice</button>
                     </div>
                 `;
             });
@@ -905,14 +975,34 @@
             document.getElementById('editedHours').value = '';
         });
 
-        // Generate Invoice
-        function generateInvoice(email) {
+        // Invoice Modal
+        function openInvoiceModal(email) {
             const entries = state.timeEntries.filter(t => t.email === email);
-            const rate = state.employeeRates[email] || 0;
-            let totalHours = 0;
-            let invoiceContent = `INVOICE\n\n===========================================\nEMPLOYEE: ${email}\nHOURLY RATE: $${rate.toFixed(2)}\nDATE: ${new Date().toLocaleDateString()}\n===========================================\n\n`;
+            state.currentInvoiceEmployee = email;
+            state.currentInvoiceEntries = entries;
+            document.getElementById('invoiceTitle').value = '';
+            document.getElementById('invoiceDescription').value = '';
+            document.getElementById('invoiceModal').classList.add('show');
+        }
 
+        function closeInvoiceModal() {
+            document.getElementById('invoiceModal').classList.remove('show');
+            state.currentInvoiceEmployee = null;
+            state.currentInvoiceEntries = null;
+        }
+
+        // Generate PDF Invoice
+        function generateInvoicePDF() {
+            const email = state.currentInvoiceEmployee;
+            const entries = state.currentInvoiceEntries;
+            const user = state.users.find(u => u.email === email);
+            const rate = state.employeeRates[email] || 0;
+            const invoiceTitle = document.getElementById('invoiceTitle').value || 'Invoice';
+            const invoiceDescription = document.getElementById('invoiceDescription').value;
+
+            let totalHours = 0;
             const projectBreakdown = {};
+
             entries.forEach(entry => {
                 const hours = parseFloat(calculateHours(entry));
                 totalHours += hours;
@@ -920,26 +1010,116 @@
                 projectBreakdown[proj] = (projectBreakdown[proj] || 0) + hours;
             });
 
-            invoiceContent += `PROJECT BREAKDOWN:\n`;
-            Object.entries(projectBreakdown).forEach(([proj, hours]) => {
-                const amount = (hours * rate).toFixed(2);
-                invoiceContent += `${proj}: ${hours.toFixed(2)} hours @ $${rate.toFixed(2)}/hr = $${amount}\n`;
-            });
+            const totalAmount = totalHours * rate;
+            const invoiceDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 
-            invoiceContent += `\n===========================================\nTOTAL HOURS: ${totalHours.toFixed(2)}\nTOTAL AMOUNT DUE: $${(totalHours * rate).toFixed(2)}\n===========================================\n\n\nDETAILED ENTRIES:\n---\n`;
+            // Create HTML for PDF
+            const invoiceHTML = `
+                <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 40px; background: white; color: #1a1a1a;">
+                    <!-- Header -->
+                    <div style="text-align: center; margin-bottom: 40px; border-bottom: 3px solid #a8d5ba; padding-bottom: 20px;">
+                        <h1 style="color: #3B6D11; margin: 0; font-size: 32px;">🌿 ${invoiceTitle}</h1>
+                        <p style="color: #a8d5ba; margin: 8px 0 0 0; font-size: 14px;">Time Tracker Invoice</p>
+                    </div>
 
-            entries.forEach(entry => {
-                const hours = calculateHours(entry);
-                invoiceContent += `${formatDate(entry.clockIn)} | ${formatTime(entry.clockIn)} - ${formatTime(entry.clockOut)} | ${hours}h | Project: ${entry.project || 'N/A'} | Task: ${entry.task || 'N/A'}\n`;
-            });
+                    <!-- Employee Info -->
+                    <div style="margin-bottom: 30px;">
+                        <h2 style="color: #3B6D11; margin: 0 0 12px 0; font-size: 18px;">Employee Details</h2>
+                        <p style="margin: 6px 0; color: #333;"><strong>Name:</strong> ${user.firstName} ${user.lastName}</p>
+                        <p style="margin: 6px 0; color: #333;"><strong>Email:</strong> ${email}</p>
+                        <p style="margin: 6px 0; color: #333;"><strong>Hourly Rate:</strong> $${rate.toFixed(2)}/hour</p>
+                        <p style="margin: 6px 0; color: #333;"><strong>Invoice Date:</strong> ${invoiceDate}</p>
+                    </div>
 
-            const blob = new Blob([invoiceContent], { type: 'text/plain' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `invoice-${email}-${new Date().toISOString().split('T')[0]}.txt`;
-            a.click();
-            window.URL.revokeObjectURL(url);
+                    ${invoiceDescription ? `
+                    <div style="margin-bottom: 30px; background: #f8f5f0; padding: 15px; border-radius: 8px; border-left: 4px solid #a8d5ba;">
+                        <h3 style="color: #3B6D11; margin: 0 0 8px 0; font-size: 16px;">Description</h3>
+                        <p style="margin: 0; color: #555; white-space: pre-wrap;">${invoiceDescription}</p>
+                    </div>
+                    ` : ''}
+
+                    <!-- Project Breakdown -->
+                    <div style="margin-bottom: 30px;">
+                        <h2 style="color: #3B6D11; margin: 0 0 12px 0; font-size: 18px;">Project Breakdown</h2>
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background: #a8d5ba; color: white;">
+                                    <th style="padding: 12px; text-align: left; border: 1px solid #999;">Project</th>
+                                    <th style="padding: 12px; text-align: right; border: 1px solid #999;">Hours</th>
+                                    <th style="padding: 12px; text-align: right; border: 1px solid #999;">Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${Object.entries(projectBreakdown).map(([proj, hours]) => `
+                                    <tr style="border: 1px solid #ddd;">
+                                        <td style="padding: 12px; border: 1px solid #ddd;">${proj}</td>
+                                        <td style="padding: 12px; text-align: right; border: 1px solid #ddd;">${hours.toFixed(2)}</td>
+                                        <td style="padding: 12px; text-align: right; border: 1px solid #ddd;">$${(hours * rate).toFixed(2)}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Time Entries Detail -->
+                    <div style="margin-bottom: 30px;">
+                        <h2 style="color: #3B6D11; margin: 0 0 12px 0; font-size: 18px;">Time Entry Details</h2>
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background: #d4b5f0; color: white;">
+                                    <th style="padding: 10px; text-align: left; border: 1px solid #999; font-size: 13px;">Date</th>
+                                    <th style="padding: 10px; text-align: left; border: 1px solid #999; font-size: 13px;">Time In</th>
+                                    <th style="padding: 10px; text-align: left; border: 1px solid #999; font-size: 13px;">Time Out</th>
+                                    <th style="padding: 10px; text-align: right; border: 1px solid #999; font-size: 13px;">Hours</th>
+                                    <th style="padding: 10px; text-align: left; border: 1px solid #999; font-size: 13px;">Project</th>
+                                    <th style="padding: 10px; text-align: left; border: 1px solid #999; font-size: 13px;">Task</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${entries.map(entry => `
+                                    <tr style="border: 1px solid #ddd;">
+                                        <td style="padding: 10px; border: 1px solid #ddd; font-size: 13px;">${formatDate(entry.clockIn)}</td>
+                                        <td style="padding: 10px; border: 1px solid #ddd; font-size: 13px;">${formatTime(entry.clockIn)}</td>
+                                        <td style="padding: 10px; border: 1px solid #ddd; font-size: 13px;">${formatTime(entry.clockOut)}</td>
+                                        <td style="padding: 10px; border: 1px solid #ddd; text-align: right; font-size: 13px;">${calculateHours(entry)}</td>
+                                        <td style="padding: 10px; border: 1px solid #ddd; font-size: 13px;">${entry.project || '-'}</td>
+                                        <td style="padding: 10px; border: 1px solid #ddd; font-size: 13px;">${entry.task || '-'}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Totals -->
+                    <div style="background: #f8f5f0; padding: 20px; border-radius: 8px; border: 2px solid #a8d5ba;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 16px;">
+                            <span style="color: #3B6D11; font-weight: bold;">Total Hours:</span>
+                            <span style="color: #3B6D11; font-weight: bold;">${totalHours.toFixed(2)}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 20px; color: #3B6D11;">
+                            <span style="font-weight: bold;">Total Amount Due:</span>
+                            <span style="font-weight: bold;">$${totalAmount.toFixed(2)}</span>
+                        </div>
+                    </div>
+
+                    <!-- Footer -->
+                    <div style="margin-top: 40px; text-align: center; color: #999; font-size: 12px; border-top: 1px solid #ddd; padding-top: 20px;">
+                        <p style="margin: 0;">Generated by Time Tracker Pro • ${invoiceDate}</p>
+                        <p style="margin: 8px 0 0 0;">Thank you for your work!</p>
+                    </div>
+                </div>
+            `;
+
+            const opt = {
+                margin: [10, 10, 10, 10],
+                filename: `invoice-${user.firstName}-${user.lastName}-${new Date().toISOString().split('T')[0]}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
+            };
+
+            html2pdf().set(opt).from(invoiceHTML).save();
+            closeInvoiceModal();
         }
 
         // Dark Mode Toggle
