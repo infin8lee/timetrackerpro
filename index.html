@@ -506,6 +506,25 @@
                             Allow Manual Time Entry
                         </label>
                     </div>
+
+                    <div style="background: var(--bg-entry); padding: 16px; border-radius: 8px; margin-top: 24px;">
+                        <h3 style="color: var(--label-color); margin-top: 0;">💾 Data Backup & Sync</h3>
+                        <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 16px;">⚠️ <strong>Important:</strong> Clearing browser cache will delete all data. Use backup feature to save your data.</p>
+
+                        <div class="grid-2" style="margin-bottom: 12px;">
+                            <button id="exportDataBtn" class="button button-primary">📥 Export All Data</button>
+                            <button id="importDataBtn" class="button button-secondary">📤 Import Data</button>
+                        </div>
+                        <input type="file" id="importFileInput" style="display: none;" accept=".json">
+
+                        <p style="color: var(--text-tertiary); font-size: 12px; margin: 12px 0 0 0;">
+                            <strong>How to sync employees from another device:</strong><br>
+                            1. Employee signs up on their device<br>
+                            2. They export their data file<br>
+                            3. You import that file here to add them<br>
+                            4. All devices now have the same data
+                        </p>
+                    </div>
                 </div>
 
                 <!-- Employees Tab -->
@@ -1343,6 +1362,76 @@
             event.target.classList.add('active');
             renderAdmin();
         }
+
+        // Export Data
+        document.getElementById('exportDataBtn').addEventListener('click', function() {
+            const dataToExport = {
+                users: state.users,
+                timeEntries: state.timeEntries,
+                settings: state.settings,
+                employeeRates: state.employeeRates,
+                nextEmployeeId: state.nextEmployeeId,
+                exportedAt: new Date().toISOString()
+            };
+            const dataStr = JSON.stringify(dataToExport, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `timetracker-backup-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+            alert('Data exported successfully!');
+        });
+
+        // Import Data
+        document.getElementById('importDataBtn').addEventListener('click', function() {
+            document.getElementById('importFileInput').click();
+        });
+
+        document.getElementById('importFileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                try {
+                    const importedData = JSON.parse(event.target.result);
+
+                    // Merge imported data with existing data
+                    // Add new users (avoid duplicates)
+                    importedData.users.forEach(importedUser => {
+                        if (!state.users.find(u => u.email === importedUser.email)) {
+                            state.users.push(importedUser);
+                        }
+                    });
+
+                    // Add new time entries (avoid duplicates by ID)
+                    importedData.timeEntries.forEach(importedEntry => {
+                        if (!state.timeEntries.find(e => e.id === importedEntry.id)) {
+                            state.timeEntries.push(importedEntry);
+                        }
+                    });
+
+                    // Merge employee rates
+                    Object.assign(state.employeeRates, importedData.employeeRates || {});
+
+                    // Update next employee ID if needed
+                    if (importedData.nextEmployeeId > state.nextEmployeeId) {
+                        state.nextEmployeeId = importedData.nextEmployeeId;
+                    }
+
+                    saveData();
+                    renderAdmin();
+                    alert(`Data imported successfully! Added ${importedData.users.length} employee(s) and ${importedData.timeEntries.length} time entry(ies).`);
+                    document.getElementById('importFileInput').value = '';
+                } catch (error) {
+                    alert('Error importing file. Make sure it\'s a valid backup file.');
+                    console.error(error);
+                }
+            };
+            reader.readAsText(file);
+        });
 
         // Render Admin
         function renderAdmin() {
