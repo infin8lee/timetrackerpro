@@ -540,8 +540,7 @@
                     <h2>👥 Employees & Hourly Rates</h2>
                     <div style="margin-bottom: 16px; display: flex; gap: 12px; flex-wrap: wrap;">
                         <button id="addEmployeeManuallyBtn" class="button button-primary">➕ Add Employee Manually</button>
-                        <button id="importTimesheetBtn" class="button button-secondary">📥 Import Timesheet PDF</button>
-                        <input type="file" id="timesheetPdfInput" style="display: none;" accept=".pdf">
+                        <button id="importTimesheetBtn" class="button button-secondary">📥 Import Timesheet</button>
                     </div>
                     <div id="employeeRatesList"></div>
                 </div>
@@ -722,6 +721,21 @@
                 <label class="label">Correct Clock In Time</label>
                 <input type="datetime-local" id="editRequestClockIn" required>
             </div>
+            <div class="form-group">
+                <label class="label">Correct Clock Out Time</label>
+                <input type="datetime-local" id="editRequestClockOut" required>
+            </div>
+            <div class="form-group">
+                <label class="label">Reason for Edit</label>
+                <textarea id="editRequestReason" placeholder="Explain why this time entry needs to be corrected..." style="resize: vertical; min-height: 80px;"></textarea>
+            </div>
+            <div id="editRequestDetails" style="background: var(--bg-entry); padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 12px; color: var(--text-secondary);"></div>
+            <div class="grid-2">
+                <button class="button button-primary" onclick="submitEditRequest()">📧 Send Request</button>
+                <button class="button button-secondary" onclick="closeEditRequestModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
 
     <!-- Add Employee Manually Modal -->
     <div id="addEmployeeModal" class="modal-overlay">
@@ -775,22 +789,6 @@
             <div class="grid-2">
                 <button class="button button-primary" id="confirmImportBtn" onclick="confirmImportTimesheet()" style="display: none;">✅ Import Data</button>
                 <button class="button button-secondary" onclick="closeImportTimesheetModal()">Cancel</button>
-            </div>
-        </div>
-    </div>
-
-            <div class="form-group">
-                <label class="label">Correct Clock Out Time</label>
-                <input type="datetime-local" id="editRequestClockOut" required>
-            </div>
-            <div class="form-group">
-                <label class="label">Reason for Edit</label>
-                <textarea id="editRequestReason" placeholder="Explain why this time entry needs to be corrected..." style="resize: vertical; min-height: 80px;"></textarea>
-            </div>
-            <div id="editRequestDetails" style="background: var(--bg-entry); padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 12px; color: var(--text-secondary);"></div>
-            <div class="grid-2">
-                <button class="button button-primary" onclick="submitEditRequest()">📧 Send Request</button>
-                <button class="button button-secondary" onclick="closeEditRequestModal()">Cancel</button>
             </div>
         </div>
     </div>
