@@ -3,41 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🌿 Time Tracker Pro</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <title>Timesheet Management System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --bg-primary: linear-gradient(135deg, #f8f5f0 0%, #fef8f3 100%);
-            --bg-card: #ffffff;
-            --bg-entry: #f8f5f0;
-            --text-primary: #1a1a1a;
-            --text-secondary: #666;
-            --text-tertiary: #999;
-            --border-color: rgba(168, 213, 186, 0.3);
-            --label-color: #3B6D11;
-            --header-gradient: linear-gradient(135deg, #a8d5ba 0%, #d4b5f0 100%);
-            --input-border: #f4c0d1;
-            --entry-border: #a8d5ba;
-            --entry-text: #a8d5ba;
-        }
-
-        html.dark-mode {
-            --bg-primary: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            --bg-card: #2d2d44;
-            --bg-entry: #242438;
-            --text-primary: #f0f0f0;
-            --text-secondary: #b0b0b0;
-            --text-tertiary: #888;
-            --border-color: rgba(168, 213, 186, 0.2);
-            --label-color: #9dd4a8;
-            --header-gradient: linear-gradient(135deg, #2d5a3d 0%, #4a3a7a 100%);
-            --input-border: #5a3a6a;
-            --entry-border: #5a8b7a;
-            --entry-text: #8dd4b8;
-        }
-
         * {
             margin: 0;
             padding: 0;
@@ -45,2510 +13,797 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: var(--bg-primary);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1a1f3a;
+            color: #e0e0e0;
+            padding: 20px;
             min-height: 100vh;
-            color: var(--text-primary);
-            transition: background-color 0.3s ease, color 0.3s ease;
         }
 
         .container {
-            min-height: 100vh;
+            max-width: 1400px;
+            margin: 0 auto;
         }
 
         .header {
-            background: var(--header-gradient);
-            padding: 20px 24px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-            border-bottom: 2px solid #f4c0d1;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 16px;
-        }
-
-        .header-content {
-            display: flex;
-            align-items: center;
-            gap: 16px;
+            padding: 20px;
+            margin-bottom: 30px;
         }
 
         .header h1 {
-            color: #fff;
             font-size: 28px;
-            margin-bottom: 8px;
-        }
-
-        .header p {
-            color: rgba(255, 255, 255, 0.9);
-            font-size: 14px;
-            margin: 0;
-        }
-
-        #darkModeToggle {
-            background: rgba(255, 255, 255, 0.2);
+            font-weight: 700;
+            margin-bottom: 20px;
             color: #fff;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            padding: 10px 16px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 14px;
-            transition: all 0.3s ease;
-        }
-
-        #darkModeToggle:hover {
-            background: rgba(255, 255, 255, 0.3);
-        }
-
-        .content {
-            max-width: 1000px;
-            margin: 0 auto;
-            padding: 24px;
-        }
-
-        .card {
-            background: var(--bg-card);
-            border-radius: 16px;
-            padding: 24px;
-            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
-            border: 1px solid var(--border-color);
-            margin-bottom: 16px;
-            transition: background-color 0.3s ease;
-        }
-
-        .card h2 {
-            color: var(--label-color);
-            margin-top: 0;
-            margin-bottom: 16px;
-        }
-
-        .card h3 {
-            color: #c79db5;
-            margin: 0 0 12px 0;
-        }
-
-        .form-group {
-            margin-bottom: 16px;
-        }
-
-        .label {
-            display: block;
-            margin-bottom: 8px;
-            color: var(--label-color);
-            font-weight: 600;
-            font-size: 14px;
-        }
-
-        input[type="email"],
-        input[type="text"],
-        input[type="password"],
-        input[type="number"],
-        input[type="datetime-local"],
-        textarea {
-            padding: 12px 16px;
-            border-radius: 10px;
-            border: 2px solid var(--input-border);
-            font-size: 14px;
-            font-family: inherit;
-            width: 100%;
-            box-sizing: border-box;
-            background: var(--bg-card);
-            color: var(--text-primary);
-            transition: all 0.3s ease;
-        }
-
-        input:focus,
-        textarea:focus {
-            outline: none;
-            border-color: #a8d5ba !important;
-            box-shadow: 0 0 0 3px rgba(168, 213, 186, 0.1);
-        }
-
-        .button {
-            padding: 12px 20px;
-            border-radius: 12px;
-            border: none;
-            font-weight: 600;
-            cursor: pointer;
-            font-size: 14px;
-            transition: all 0.3s ease;
-        }
-
-        .button:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(168, 213, 186, 0.3);
-        }
-
-        .button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .button-primary {
-            background: linear-gradient(135deg, #a8d5ba 0%, #7dd3c0 100%);
-            color: #fff;
-        }
-
-        .button-secondary {
-            background: #f4c0d1;
-            color: #993556;
-        }
-
-        .button-logout {
-            background: rgba(255,255,255,0.2);
-            color: #fff;
-        }
-
-        .grid-2 {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
-
-        .full-width {
-            width: 100%;
-        }
-
-        .time-entry {
-            background: var(--bg-entry);
-            border-left: 4px solid var(--entry-border);
-            padding: 12px 16px;
-            border-radius: 8px;
-            margin-bottom: 8px;
-            transition: background-color 0.3s ease;
-        }
-
-        .time-entry p {
-            margin: 4px 0;
-            font-size: 13px;
-            color: var(--text-secondary);
-        }
-
-        .entry-header {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: var(--label-color);
-        }
-
-        .entry-time {
-            color: var(--entry-text);
-            font-weight: 600;
         }
 
         .tabs {
             display: flex;
-            gap: 8px;
-            margin-bottom: 16px;
+            gap: 12px;
             flex-wrap: wrap;
         }
 
         .tab-button {
-            padding: 10px 16px;
-            border-radius: 8px;
+            padding: 10px 20px;
+            background: #2d3456;
+            color: #a0a0a0;
             border: none;
-            background: #ccc;
-            color: #333;
-            font-weight: 600;
+            border-radius: 6px;
             cursor: pointer;
-            transition: all 0.3s ease;
+            font-weight: 500;
+            font-size: 14px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tab-button:hover {
+            background: #3a4160;
         }
 
         .tab-button.active {
-            background: #a8d5ba;
-            color: #fff;
+            background: #c0e0a0;
+            color: #1a1f3a;
         }
 
-        .hidden {
+        .tab-content {
             display: none;
+            animation: fadeIn 0.3s ease;
         }
 
-        .checkbox-label {
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .card {
+            background: #252d48;
+            border: 1px solid #3a4360;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #c0e0a0;
+            margin-bottom: 20px;
             display: flex;
             align-items: center;
             gap: 10px;
-            cursor: pointer;
-            color: var(--label-color);
-            font-weight: 500;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+        }
+
+        .form-field {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #a0a0a0;
+        }
+
+        input, select, textarea {
+            padding: 10px 12px;
+            border: 1px solid #3a4360;
+            border-radius: 6px;
+            background: #1a1f3a;
+            color: #e0e0e0;
+            font-family: inherit;
+            font-size: 13px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #c0e0a0;
+            box-shadow: 0 0 0 2px rgba(192, 224, 160, 0.1);
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
         }
 
         input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
             cursor: pointer;
-            accent-color: #a8d5ba;
+            accent-color: #c0e0a0;
         }
 
-        .invoice-item {
-            background: var(--bg-entry);
-            border-left: 4px solid var(--entry-border);
-            padding: 12px 16px;
-            border-radius: 8px;
-            margin-bottom: 16px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: background-color 0.3s ease;
-        }
-
-        .invoice-details p {
+        .checkbox-label {
             margin: 0;
-            font-size: 13px;
-            color: var(--text-secondary);
-        }
-
-        .invoice-details p:first-child {
-            font-weight: 600;
-            color: var(--label-color);
-        }
-
-        .invoice-details .amount {
-            font-weight: 600;
-            color: var(--label-color);
-        }
-
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .modal-overlay.show {
-            display: flex;
-        }
-
-        .modal-content {
-            background: var(--bg-card);
-            border-radius: 16px;
-            padding: 24px;
-            max-width: 500px;
-            width: 90%;
-            max-height: 80vh;
-            overflow-y: auto;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-        }
-
-        .modal-close {
-            float: right;
-            font-size: 24px;
             cursor: pointer;
-            color: var(--text-secondary);
+            color: #e0e0e0;
+            font-size: 14px;
+            text-transform: none;
+            letter-spacing: normal;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            background: #c0e0a0;
+            color: #1a1f3a;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            transition: background 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            background: #d0f0b0;
+        }
+
+        .btn-secondary {
+            background: #ff9999;
+            color: #1a1f3a;
+        }
+
+        .btn-secondary:hover {
+            background: #ffaaaa;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        thead {
+            background: #1a1f3a;
+            border-bottom: 2px solid #c0e0a0;
+        }
+
+        th {
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #c0e0a0;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #3a4360;
+        }
+
+        tbody tr:hover {
+            background: #2a3250;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        .summary-item {
+            padding: 16px;
+            background: #1a1f3a;
+            border: 1px solid #3a4360;
+            border-radius: 6px;
+        }
+
+        .summary-label {
+            font-size: 12px;
+            color: #a0a0a0;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 8px;
+        }
+
+        .summary-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: #c0e0a0;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .warning {
+            padding: 12px;
+            background: rgba(255, 200, 0, 0.1);
+            border: 1px solid #ffc800;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            color: #ffc800;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .delete-btn {
+            padding: 6px 10px;
+            background: #ff9999;
+            color: #1a1f3a;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        .delete-btn:hover {
+            background: #ffaaaa;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .icon {
+            font-size: 16px;
+        }
+
+        @media print {
+            body {
+                background: white;
+                color: black;
+            }
+            .tabs, .button-group, .delete-btn {
+                display: none;
+            }
+            .card {
+                background: white;
+                border: 1px solid #ccc;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .form-group {
+                grid-template-columns: 1fr;
+            }
+            .tabs {
+                gap: 8px;
+            }
+            .tab-button {
+                padding: 8px 12px;
+                font-size: 12px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <div class="header-content">
-                <div>
-                    <h1>🌿 Time Tracker Pro</h1>
-                    <p>Cute & mindful time management</p>
-                </div>
-                <button id="darkModeToggle" class="button">🌙 Dark Mode</button>
+            <h1>📊 Timesheet Management</h1>
+            <div class="tabs">
+                <button class="tab-button active" onclick="switchTab('settings')" title="Settings">
+                    <span class="icon">⚙️</span> Settings
+                </button>
+                <button class="tab-button" onclick="switchTab('employees')" title="Employees & Rates">
+                    <span class="icon">👥</span> Employees & Rates
+                </button>
+                <button class="tab-button" onclick="switchTab('entries')" title="All Entries">
+                    <span class="icon">📋</span> All Entries
+                </button>
+                <button class="tab-button" onclick="switchTab('report')" title="Timesheet Report">
+                    <span class="icon">📄</span> Timesheet Report
+                </button>
+                <button class="tab-button" onclick="switchTab('invoices')" title="Invoices">
+                    <span class="icon">💰</span> Invoices
+                </button>
             </div>
-            <button id="logoutBtn" class="button button-logout hidden">Logout</button>
         </div>
 
-        <div class="content">
-            <!-- LOGIN VIEW -->
-            <div id="loginView">
-                <div class="card">
-                    <h2>👤 Employee Login</h2>
-                    <form id="employeeLoginForm">
-                        <div class="form-group">
-                            <label class="label">Email Address</label>
-                            <input type="email" id="loginEmail" placeholder="your@email.com" required>
-                        </div>
-                        <div class="form-group">
-                            <label class="label">Password</label>
-                            <input type="password" id="loginPassword" placeholder="Enter your password" required>
-                        </div>
-                        <button type="submit" class="button button-primary full-width">Login</button>
-                    </form>
-                </div>
+        <!-- Settings Tab -->
+        <div id="settings" class="tab-content active">
+            <div class="card">
+                <div class="card-title">⚙️ Settings</div>
 
-                <div class="card">
-                    <h2>✨ New Employee? Sign Up</h2>
-                    <form id="employeeSignupForm">
-                        <div class="form-group">
-                            <label class="label">First Name</label>
-                            <input type="text" id="signupFirstName" placeholder="John" required>
-                        </div>
-                        <div class="form-group">
-                            <label class="label">Last Name</label>
-                            <input type="text" id="signupLastName" placeholder="Doe" required>
-                        </div>
-                        <div class="form-group">
-                            <label class="label">Email Address</label>
-                            <input type="email" id="signupEmail" placeholder="your@email.com" required>
-                        </div>
-                        <div class="form-group">
-                            <label class="label">Password</label>
-                            <input type="password" id="signupPassword" placeholder="Create a password" required>
-                        </div>
-                        <div class="form-group">
-                            <label class="label">Confirm Password</label>
-                            <input type="password" id="signupPasswordConfirm" placeholder="Confirm password" required>
-                        </div>
-                        <button type="submit" class="button button-secondary full-width">Sign Up</button>
-                    </form>
-                </div>
-
-                <div class="card">
-                    <h2>🔐 Admin Login</h2>
-                    <form id="adminLoginForm">
-                        <div class="form-group">
-                            <label class="label">Admin Password</label>
-                            <input type="password" id="adminPassword" placeholder="Enter password" required>
-                        </div>
-                        <button type="submit" class="button button-primary full-width">Admin Access</button>
-                    </form>
-                </div>
-            </div>
-
-            <!-- EMPLOYEE DASHBOARD VIEW -->
-            <div id="dashboardView" class="hidden">
-                <div class="card">
-                    <h2>⏱️ Clock In/Out</h2>
-                    <div class="grid-2">
-                        <button id="clockInBtn" class="button button-primary">✓ Clock In</button>
-                        <button id="clockOutBtn" class="button button-secondary" disabled>✕ Clock Out</button>
+                <div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="autoClockInOut" checked>
+                        <label for="autoClockInOut" class="checkbox-label">Allow Auto Clock In/Out</label>
                     </div>
-                    <p id="clockedInStatus" style="color: var(--label-color); font-size: 14px; margin-top: 16px; display: none;"></p>
-                </div>
-
-                <div class="card">
-                    <h2>📋 Project & Task</h2>
-                    <div class="form-group">
-                        <label class="label">Project Name</label>
-                        <input type="text" id="projectInput" placeholder="e.g., Website Redesign">
-                    </div>
-                    <div class="form-group">
-                        <label class="label">Task Details</label>
-                        <input type="text" id="taskInput" placeholder="e.g., Design homepage mockups">
-                    </div>
-                </div>
-
-                <div id="manualEntryCard" class="card hidden">
-                    <h2>📝 Manual Time Entry</h2>
-                    <form id="manualEntryForm">
-                        <div class="form-group">
-                            <label class="label">Time Worked</label>
-                            <input type="datetime-local" id="manualTime" required>
-                        </div>
-                        <button type="submit" class="button button-primary full-width">Add Manual Entry</button>
-                    </form>
-                </div>
-
-                <div class="card">
-                    <h2>📊 Your Timesheet</h2>
-                    <div style="background: var(--bg-entry); padding: 16px; border-radius: 8px; margin-bottom: 16px;">
-                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 12px;">
-                            <div>
-                                <label class="label">Filter Type</label>
-                                <select id="employeeFilterTypeSelect" style="width: 100%; padding: 10px; border-radius: 8px; border: 2px solid var(--input-border); background: var(--bg-card); color: var(--text-primary);">
-                                    <option value="all">All Time</option>
-                                    <option value="today">Today</option>
-                                    <option value="week">This Week</option>
-                                    <option value="month">This Month</option>
-                                    <option value="custom">Custom Date Range</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="label">Start Date</label>
-                                <input type="date" id="employeeFilterStartDate" style="width: 100%; padding: 10px; border-radius: 8px; border: 2px solid var(--input-border); background: var(--bg-card); color: var(--text-primary);">
-                            </div>
-                            <div>
-                                <label class="label">End Date</label>
-                                <input type="date" id="employeeFilterEndDate" style="width: 100%; padding: 10px; border-radius: 8px; border: 2px solid var(--input-border); background: var(--bg-card); color: var(--text-primary);">
-                            </div>
-                        </div>
-                    </div>
-                    <div id="employeeTimeEntries">
-                        <p style="color: #888; font-size: 14px;">No time entries yet</p>
-                    </div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px;">
-                        <button id="downloadSummaryBtn" class="button button-primary">📤 Export Timesheet</button>
-                        <button id="viewTimesheetBtn" class="button button-secondary">📋 View Full Timesheet</button>
-                    </div>
-                    <div style="background: rgba(168, 213, 186, 0.1); border-left: 4px solid var(--label-color); padding: 12px; border-radius: 6px; margin-top: 16px;">
-                        <p style="color: var(--text-primary); font-size: 13px; font-weight: 600; margin-bottom: 6px;">📮 Weekly Timesheet Submission</p>
-                        <p style="color: var(--text-secondary); font-size: 12px; margin: 0;">
-                            Download your timesheet every <strong>Friday before 12:00 AM</strong> and send it to:<br>
-                            <strong style="color: #3B6D11;">📧 lee@im-xp.com</strong>
-                        </p>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="manualTimeEntry">
+                        <label for="manualTimeEntry" class="checkbox-label">Allow Manual Time Entry</label>
                     </div>
                 </div>
             </div>
 
-            <!-- ADMIN VIEW -->
-            <div id="adminView" class="hidden">
-                <div class="tabs">
-                    <button class="tab-button active" onclick="switchAdminTab('settings')">⚙️ Settings</button>
-                    <button class="tab-button" onclick="switchAdminTab('employees')">👥 Employees & Rates</button>
-                    <button class="tab-button" onclick="switchAdminTab('entries')">📊 All Entries</button>
-                    <button class="tab-button" onclick="switchAdminTab('report')">📋 Timesheet Report</button>
-                    <button class="tab-button" onclick="switchAdminTab('invoices')">📄 Invoices</button>
+            <div class="card">
+                <div class="card-title">💾 Data Backup & Sync</div>
+                <div class="warning">
+                    <span>⚠️</span>
+                    <span><strong>Important:</strong> Clearing browser cache will delete all data. Use backup feature to save your data.</span>
                 </div>
+                <div class="button-group">
+                    <button class="btn" onclick="exportAllData()">
+                        <span class="icon">📥</span> Export All Data
+                    </button>
+                </div>
+            </div>
+        </div>
 
-                <!-- Settings Tab -->
-                <div id="settingsTab" class="card">
-                    <h2>⚙️ Settings</h2>
-                    <div class="form-group">
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="allowAutoClocking" checked>
-                            Allow Auto Clock In/Out
-                        </label>
+        <!-- Employees & Rates Tab -->
+        <div id="employees" class="tab-content">
+            <div class="card">
+                <div class="card-title">👥 Add Employee</div>
+                <div class="form-group">
+                    <div class="form-field">
+                        <label for="empName">Employee Name</label>
+                        <input type="text" id="empName" placeholder="e.g., Melvin Manahan">
                     </div>
-                    <div class="form-group">
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="allowManualEntry">
-                            Allow Manual Time Entry
-                        </label>
+                    <div class="form-field">
+                        <label for="empRate">Hourly Rate ($)</label>
+                        <input type="number" id="empRate" placeholder="e.g., 6.05" step="0.01" min="0">
                     </div>
-
-                    <div style="background: var(--bg-entry); padding: 16px; border-radius: 8px; margin-top: 24px;">
-                        <h3 style="color: var(--label-color); margin-top: 0;">💾 Data Backup & Sync</h3>
-                        <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 16px;">⚠️ <strong>Important:</strong> Clearing browser cache will delete all data. Use backup feature to save your data.</p>
-
-                        <div class="grid-2" style="margin-bottom: 12px;">
-                            <button id="exportDataBtn" class="button button-primary">📥 Export All Data</button>
-                            <button id="importDataBtn" class="button button-secondary">📤 Import Data</button>
-                        </div>
-                        <input type="file" id="importFileInput" style="display: none;" accept=".json">
-
-                        <p style="color: var(--text-tertiary); font-size: 12px; margin: 12px 0 0 0;">
-                            <strong>How to sync employees from another device:</strong><br>
-                            1. Employee signs up on their device<br>
-                            2. They export their data file<br>
-                            3. You import that file here to add them<br>
-                            4. All devices now have the same data
-                        </p>
+                    <div class="form-field">
+                        <label for="empRole">Role/Position</label>
+                        <input type="text" id="empRole" placeholder="e.g., AI Video Editor">
                     </div>
                 </div>
+                <button class="btn" onclick="addEmployee()">
+                    <span class="icon">➕</span> Add Employee
+                </button>
 
-                <!-- Employees Tab -->
-                <div id="employeesTab" class="card hidden">
-                    <h2>👥 Employees & Hourly Rates</h2>
-                    <div style="margin-bottom: 16px; display: flex; gap: 12px; flex-wrap: wrap;">
-                        <button id="addEmployeeManuallyBtn" class="button button-primary">➕ Add Employee Manually</button>
-                        <button id="importTimesheetBtn" class="button button-secondary">📥 Import Timesheet</button>
-                    </div>
-                    <div id="employeeRatesList"></div>
-                </div>
+                <h3 style="margin-top: 30px; margin-bottom: 15px; color: #c0e0a0;">Employees</h3>
+                <table id="employeeTable">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Role</th>
+                            <th>Hourly Rate</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="employeeList">
+                        <tr><td colspan="4" style="text-align: center; color: #666;">No employees added yet</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
 
-                <!-- Entries Tab -->
-                <div id="entriesTab" class="card hidden">
-                    <h2>📊 All Time Entries</h2>
-                    <div style="background: var(--bg-entry); padding: 16px; border-radius: 8px; margin-bottom: 16px;">
-                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px; margin-bottom: 12px;">
-                            <div>
-                                <label class="label">Filter by Employee</label>
-                                <select id="filterEmployeeSelect" style="width: 100%; padding: 10px; border-radius: 8px; border: 2px solid var(--input-border); background: var(--bg-card); color: var(--text-primary);">
-                                    <option value="">All Employees</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="label">Filter Type</label>
-                                <select id="filterTypeSelect" style="width: 100%; padding: 10px; border-radius: 8px; border: 2px solid var(--input-border); background: var(--bg-card); color: var(--text-primary);">
-                                    <option value="all">All Time</option>
-                                    <option value="today">Today</option>
-                                    <option value="week">This Week</option>
-                                    <option value="month">This Month</option>
-                                    <option value="custom">Custom Date Range</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="label">Start Date</label>
-                                <input type="date" id="filterStartDate" style="width: 100%; padding: 10px; border-radius: 8px; border: 2px solid var(--input-border); background: var(--bg-card); color: var(--text-primary);">
-                            </div>
-                            <div>
-                                <label class="label">End Date</label>
-                                <input type="date" id="filterEndDate" style="width: 100%; padding: 10px; border-radius: 8px; border: 2px solid var(--input-border); background: var(--bg-card); color: var(--text-primary);">
-                            </div>
-                        </div>
-                    </div>
-                    <button class="button button-primary" style="margin-bottom: 16px;" onclick="openAddEntryModal()">➕ Add Time Entry</button>
-                    <div id="allTimeEntriesList"></div>
-                </div>
-
-                <!-- Timesheet Report Tab -->
-                <div id="reportTab" class="card hidden">
-                    <h2>📋 Timesheet Report</h2>
-                    <div style="background: var(--bg-entry); padding: 16px; border-radius: 8px; margin-bottom: 16px;">
-                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px; margin-bottom: 12px;">
-                            <div>
-                                <label class="label">Filter by Employee</label>
-                                <select id="reportFilterEmployeeSelect" style="width: 100%; padding: 10px; border-radius: 8px; border: 2px solid var(--input-border); background: var(--bg-card); color: var(--text-primary);">
-                                    <option value="">All Employees</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="label">Filter Type</label>
-                                <select id="reportFilterTypeSelect" style="width: 100%; padding: 10px; border-radius: 8px; border: 2px solid var(--input-border); background: var(--bg-card); color: var(--text-primary);">
-                                    <option value="all">All Time</option>
-                                    <option value="today">Today</option>
-                                    <option value="week">This Week</option>
-                                    <option value="month">This Month</option>
-                                    <option value="custom">Custom Date Range</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="label">Start Date</label>
-                                <input type="date" id="reportFilterStartDate" style="width: 100%; padding: 10px; border-radius: 8px; border: 2px solid var(--input-border); background: var(--bg-card); color: var(--text-primary);">
-                            </div>
-                            <div>
-                                <label class="label">End Date</label>
-                                <input type="date" id="reportFilterEndDate" style="width: 100%; padding: 10px; border-radius: 8px; border: 2px solid var(--input-border); background: var(--bg-card); color: var(--text-primary);">
-                            </div>
-                        </div>
-                    </div>
-                    <div id="timesheetReportList"></div>
-                    <button id="downloadReportBtn" class="button button-primary full-width" style="margin-top: 16px;">📥 Download Report as PDF</button>
-                </div>
-
-                <!-- Invoices Tab -->
-                <div id="invoicesTab" class="card hidden">
-                    <h2>📄 Generate Invoices</h2>
-                    <div id="invoicesList"></div>
-                </div>
-
-                <!-- Edit Entry Form -->
-                <div id="editEntryCard" class="card hidden" style="background: #fffaf5; border-left: 4px solid #f4c0d1;">
-                    <h3>✏️ Edit Time Entry</h3>
-                    <div class="form-group">
-                        <label class="label">Clock In Time</label>
-                        <input type="datetime-local" id="editedClockIn" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="label">Clock Out Time</label>
-                        <input type="datetime-local" id="editedClockOut" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="label">Project</label>
-                        <input type="text" id="editedProject" placeholder="Project name">
-                    </div>
-                    <div class="form-group">
-                        <label class="label">Task</label>
-                        <input type="text" id="editedTask" placeholder="Task description">
-                    </div>
-                    <div class="grid-2">
-                        <button id="saveEditBtn" class="button button-primary">Save Changes</button>
-                        <button id="cancelEditBtn" class="button button-secondary">Cancel</button>
-                    </div>
-                </div>
-
-                <div id="addEntryCard" class="card hidden" style="background: #f5fffb; border-left: 4px solid #a8d5ba;">
-                    <h3>➕ Add New Time Entry</h3>
-                    <div class="form-group">
-                        <label class="label">Employee</label>
-                        <select id="addEntryEmployee" required style="width: 100%; padding: 10px; border-radius: 8px; border: 2px solid var(--input-border); background: var(--bg-card); color: var(--text-primary);">
-                            <option value="">Select Employee</option>
+        <!-- All Entries Tab -->
+        <div id="entries" class="tab-content">
+            <div class="card">
+                <div class="card-title">📋 Add Time Entry</div>
+                <div class="form-group">
+                    <div class="form-field">
+                        <label for="entryEmployee">Employee</label>
+                        <select id="entryEmployee">
+                            <option value="">Select employee...</option>
                         </select>
                     </div>
-                    <div class="form-group">
-                        <label class="label">Clock In Time</label>
-                        <input type="datetime-local" id="addClockIn" required>
+                    <div class="form-field">
+                        <label for="entryDate">Date</label>
+                        <input type="date" id="entryDate">
                     </div>
-                    <div class="form-group">
-                        <label class="label">Clock Out Time</label>
-                        <input type="datetime-local" id="addClockOut" required>
+                    <div class="form-field">
+                        <label for="entryIn">In Time</label>
+                        <input type="time" id="entryIn">
                     </div>
-                    <div class="form-group">
-                        <label class="label">Project</label>
-                        <input type="text" id="addProject" placeholder="Project name">
+                    <div class="form-field">
+                        <label for="entryOut">Out Time</label>
+                        <input type="time" id="entryOut">
                     </div>
-                    <div class="form-group">
-                        <label class="label">Task</label>
-                        <input type="text" id="addTask" placeholder="Task description">
+                    <div class="form-field">
+                        <label for="entryProject">Project</label>
+                        <input type="text" id="entryProject" placeholder="e.g., AI Video Editing">
                     </div>
-                    <div class="grid-2">
-                        <button id="saveAddEntryBtn" class="button button-primary">Add Entry</button>
-                        <button id="cancelAddEntryBtn" class="button button-secondary">Cancel</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Invoice Modal -->
-    <div id="invoiceModal" class="modal-overlay">
-        <div class="modal-content">
-            <span class="modal-close" onclick="closeInvoiceModal()">&times;</span>
-            <h3 style="color: var(--label-color); margin-bottom: 16px;">📄 Invoice Details</h3>
-            <div class="form-group">
-                <label class="label">Invoice Title (Optional)</label>
-                <input type="text" id="invoiceTitle" placeholder="e.g., Monthly Invoice - May 2024">
-            </div>
-            <div class="form-group">
-                <label class="label">Date Range Filter (Optional)</label>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                    <div>
-                        <label class="label" style="margin-bottom: 4px; font-size: 12px;">From</label>
-                        <input type="date" id="invoiceStartDate" style="width: 100%; padding: 8px; border-radius: 8px; border: 2px solid var(--input-border); background: var(--bg-card); color: var(--text-primary);">
-                    </div>
-                    <div>
-                        <label class="label" style="margin-bottom: 4px; font-size: 12px;">To</label>
-                        <input type="date" id="invoiceEndDate" style="width: 100%; padding: 8px; border-radius: 8px; border: 2px solid var(--input-border); background: var(--bg-card); color: var(--text-primary);">
+                    <div class="form-field">
+                        <label for="entryNotes">Notes</label>
+                        <textarea id="entryNotes" placeholder="Optional notes" style="resize: vertical; min-height: 40px;"></textarea>
                     </div>
                 </div>
-            </div>
-            <div class="form-group">
-                <label class="label">Description (Optional)</label>
-                <textarea id="invoiceDescription" placeholder="Add any notes or description..." style="resize: vertical; min-height: 80px;"></textarea>
-            </div>
-            <div class="grid-2">
-                <button class="button button-primary" onclick="generateInvoicePDF()">📥 Download PDF</button>
-                <button class="button button-secondary" onclick="closeInvoiceModal()">Cancel</button>
+                <button class="btn" onclick="addTimeEntry()">
+                    <span class="icon">➕</span> Add Entry
+                </button>
+
+                <h3 style="margin-top: 30px; margin-bottom: 15px; color: #c0e0a0;">Time Entries</h3>
+                <table id="entriesTable">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Employee</th>
+                            <th>In</th>
+                            <th>Out</th>
+                            <th class="text-right">Hours</th>
+                            <th>Project</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="entriesList">
+                        <tr><td colspan="7" style="text-align: center; color: #666;">No entries yet</td></tr>
+                    </tbody>
+                </table>
             </div>
         </div>
-    </div>
 
-    <!-- Timesheet Edit Request Modal -->
-    <div id="editRequestModal" class="modal-overlay">
-        <div class="modal-content">
-            <span class="modal-close" onclick="closeEditRequestModal()">&times;</span>
-            <h3 style="color: var(--label-color); margin-bottom: 16px;">✏️ Request Timesheet Edit</h3>
-            <div class="form-group">
-                <label class="label">Correct Clock In Time</label>
-                <input type="datetime-local" id="editRequestClockIn" required>
-            </div>
-            <div class="form-group">
-                <label class="label">Correct Clock Out Time</label>
-                <input type="datetime-local" id="editRequestClockOut" required>
-            </div>
-            <div class="form-group">
-                <label class="label">Reason for Edit</label>
-                <textarea id="editRequestReason" placeholder="Explain why this time entry needs to be corrected..." style="resize: vertical; min-height: 80px;"></textarea>
-            </div>
-            <div id="editRequestDetails" style="background: var(--bg-entry); padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 12px; color: var(--text-secondary);"></div>
-            <div class="grid-2">
-                <button class="button button-primary" onclick="submitEditRequest()">📧 Send Request</button>
-                <button class="button button-secondary" onclick="closeEditRequestModal()">Cancel</button>
+        <!-- Timesheet Report Tab -->
+        <div id="report" class="tab-content">
+            <div class="card">
+                <div class="card-title">📄 Timesheet Report</div>
+                <div class="form-group">
+                    <div class="form-field">
+                        <label for="reportEmployee">Employee</label>
+                        <select id="reportEmployee" onchange="generateReport()">
+                            <option value="">Select employee...</option>
+                        </select>
+                    </div>
+                    <div class="form-field">
+                        <label for="reportStartDate">Start Date</label>
+                        <input type="date" id="reportStartDate" onchange="generateReport()">
+                    </div>
+                    <div class="form-field">
+                        <label for="reportEndDate">End Date</label>
+                        <input type="date" id="reportEndDate" onchange="generateReport()">
+                    </div>
+                </div>
+                <button class="btn" onclick="window.print()">
+                    <span class="icon">🖨️</span> Print Report
+                </button>
+
+                <div id="reportContent" style="margin-top: 30px;"></div>
             </div>
         </div>
-    </div>
 
-    <!-- Add Employee Manually Modal -->
-    <div id="addEmployeeModal" class="modal-overlay">
-        <div class="modal-content">
-            <span class="modal-close" onclick="closeAddEmployeeModal()">&times;</span>
-            <h3 style="color: var(--label-color); margin-bottom: 16px;">➕ Add Employee Manually</h3>
-            <div class="form-group">
-                <label class="label">First Name</label>
-                <input type="text" id="newEmpFirstName" placeholder="John" required>
-            </div>
-            <div class="form-group">
-                <label class="label">Last Name</label>
-                <input type="text" id="newEmpLastName" placeholder="Doe" required>
-            </div>
-            <div class="form-group">
-                <label class="label">Email</label>
-                <input type="email" id="newEmpEmail" placeholder="john@example.com" required>
-            </div>
-            <div class="form-group">
-                <label class="label">Password</label>
-                <input type="password" id="newEmpPassword" placeholder="••••••••" required>
-            </div>
-            <div class="form-group">
-                <label class="label" style="color: var(--text-secondary); font-weight: normal;">
-                    🔢 Employee ID will be auto-generated: <strong id="newEmpIdDisplay">-</strong>
-                </label>
-            </div>
-            <div class="grid-2">
-                <button class="button button-primary" onclick="saveNewEmployee()">✅ Add Employee</button>
-                <button class="button button-secondary" onclick="closeAddEmployeeModal()">Cancel</button>
-            </div>
-        </div>
-    </div>
+        <!-- Invoices Tab -->
+        <div id="invoices" class="tab-content">
+            <div class="card">
+                <div class="card-title">💰 Generate Invoice</div>
+                <div class="form-group">
+                    <div class="form-field">
+                        <label for="invoiceEmployee">Employee</label>
+                        <select id="invoiceEmployee" onchange="updateInvoicePreview()">
+                            <option value="">Select employee...</option>
+                        </select>
+                    </div>
+                    <div class="form-field">
+                        <label for="invoiceStartDate">Period Start</label>
+                        <input type="date" id="invoiceStartDate" onchange="updateInvoicePreview()">
+                    </div>
+                    <div class="form-field">
+                        <label for="invoiceEndDate">Period End</label>
+                        <input type="date" id="invoiceEndDate" onchange="updateInvoicePreview()">
+                    </div>
+                </div>
+                <button class="btn" onclick="printInvoice()">
+                    <span class="icon">📥</span> Print Invoice
+                </button>
 
-    <!-- Import Timesheet PDF Modal -->
-    <div id="importTimesheetModal" class="modal-overlay">
-        <div class="modal-content">
-            <span class="modal-close" onclick="closeImportTimesheetModal()">&times;</span>
-            <h3 style="color: var(--label-color); margin-bottom: 16px;">📥 Import Timesheet</h3>
-            <div class="form-group">
-                <label class="label">Select Timesheet File (.json)</label>
-                <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 12px;">
-                    Upload an employee's exported timesheet file. The system will import employee info and all time entries.
-                </p>
-                <input type="file" id="importJsonInput" accept=".json" style="padding: 12px; border: 2px dashed var(--input-border); border-radius: 8px; background: var(--bg-entry); cursor: pointer;">
-            </div>
-            <div id="jsonImportStatus" style="display: none; background: var(--bg-entry); padding: 12px; border-radius: 8px; margin-bottom: 16px; color: var(--text-secondary); font-size: 13px;">
-                <p id="jsonImportMessage"></p>
-                <div id="importedDataPreview" style="margin-top: 12px;"></div>
-            </div>
-            <div class="grid-2">
-                <button class="button button-primary" id="confirmImportBtn" onclick="confirmImportTimesheet()" style="display: none;">✅ Import Data</button>
-                <button class="button button-secondary" onclick="closeImportTimesheetModal()">Cancel</button>
+                <div id="invoicePreview" style="margin-top: 30px;"></div>
             </div>
         </div>
     </div>
 
     <script>
-        const { jsPDF } = window.jspdf;
+        // Data storage
+        let employees = JSON.parse(localStorage.getItem('employees')) || [];
+        let timeEntries = JSON.parse(localStorage.getItem('timeEntries')) || [];
 
-        // Data Management
-        const state = {
-            currentUser: null,
-            userRole: null,
-            users: [],
-            timeEntries: [],
-            employeeRates: {},
-            settings: { allowManualEntry: false, allowAutoClocking: true },
-            clockedIn: false,
-            clockInTime: null,
-            editingEntry: null,
-            currentInvoiceEmployee: null,
-            currentInvoiceEntries: null,
-            nextEmployeeId: 10000,
-            filterEmployee: null,
-            filterStartDate: null,
-            filterEndDate: null,
-            filterType: 'all',
-            editRequestEntry: null
-        };
-
-        // Load data from localStorage
-        function loadData() {
-            const saved = JSON.parse(localStorage.getItem('timeTrackerData') || '{}');
-            if (saved.users) state.users = saved.users;
-            if (saved.timeEntries) state.timeEntries = saved.timeEntries;
-            if (saved.settings) state.settings = saved.settings;
-            if (saved.employeeRates) state.employeeRates = saved.employeeRates;
-            if (saved.nextEmployeeId) state.nextEmployeeId = saved.nextEmployeeId;
-            // Migrate old users without employeeId
-            state.users.forEach((user, idx) => {
-                if (!user.employeeId) {
-                    user.employeeId = 10000 + idx;
-                }
-            });
-            if (state.users.length > 0) {
-                state.nextEmployeeId = Math.max(...state.users.map(u => u.employeeId || 0)) + 1;
-            }
+        // Tab switching
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(tabName).classList.add('active');
+            event.target.closest('.tab-button').classList.add('active');
         }
 
-        // Save data to localStorage
-        function saveData() {
-            localStorage.setItem('timeTrackerData', JSON.stringify({
-                users: state.users,
-                timeEntries: state.timeEntries,
-                settings: state.settings,
-                employeeRates: state.employeeRates,
-                nextEmployeeId: state.nextEmployeeId
-            }));
-        }
+        // Employee management
+        function addEmployee() {
+            const name = document.getElementById('empName').value;
+            const rate = parseFloat(document.getElementById('empRate').value);
+            const role = document.getElementById('empRole').value;
 
-        // Utility Functions
-        function formatTime(date) {
-            if (!date) return '';
-            return new Date(date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-        }
-
-        function formatDate(date) {
-            if (!date) return '';
-            return new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-        }
-
-        function calculateHours(entry) {
-            return ((new Date(entry.clockOut) - new Date(entry.clockIn)) / (1000 * 60 * 60)).toFixed(2);
-        }
-
-        // View Management
-        function showView(viewName) {
-            document.getElementById('loginView').classList.add('hidden');
-            document.getElementById('dashboardView').classList.add('hidden');
-            document.getElementById('adminView').classList.add('hidden');
-
-            if (viewName === 'login') {
-                document.getElementById('loginView').classList.remove('hidden');
-                document.getElementById('logoutBtn').classList.add('hidden');
-            } else if (viewName === 'dashboard') {
-                document.getElementById('dashboardView').classList.remove('hidden');
-                document.getElementById('logoutBtn').classList.remove('hidden');
-            } else if (viewName === 'admin') {
-                document.getElementById('adminView').classList.remove('hidden');
-                document.getElementById('logoutBtn').classList.remove('hidden');
-            }
-        }
-
-        // Employee Login
-        document.getElementById('employeeLoginForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const email = document.getElementById('loginEmail').value;
-            const password = document.getElementById('loginPassword').value;
-            const user = state.users.find(u => u.email === email);
-            if (user && user.password === password) {
-                state.currentUser = email;
-                state.userRole = 'employee';
-                state.clockedIn = state.timeEntries.some(t => t.email === email && !t.clockOut);
-                document.getElementById('loginEmail').value = '';
-                document.getElementById('loginPassword').value = '';
-                showView('dashboard');
-                renderDashboard();
-            } else if (user) {
-                alert('Incorrect password.');
-            } else {
-                alert('User not found. Please sign up first.');
-            }
-        });
-
-        // Employee Signup
-        document.getElementById('employeeSignupForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const firstName = document.getElementById('signupFirstName').value;
-            const lastName = document.getElementById('signupLastName').value;
-            const email = document.getElementById('signupEmail').value;
-            const password = document.getElementById('signupPassword').value;
-            const passwordConfirm = document.getElementById('signupPasswordConfirm').value;
-
-            if (password !== passwordConfirm) {
-                alert('Passwords do not match');
+            if (!name || !rate) {
+                alert('Please fill in name and rate');
                 return;
             }
 
-            if (password.length < 6) {
-                alert('Password must be at least 6 characters long');
+            employees.push({ id: Date.now(), name, rate, role });
+            localStorage.setItem('employees', JSON.stringify(employees));
+
+            document.getElementById('empName').value = '';
+            document.getElementById('empRate').value = '';
+            document.getElementById('empRole').value = '';
+
+            renderEmployees();
+            updateEmployeeSelects();
+        }
+
+        function renderEmployees() {
+            const list = document.getElementById('employeeList');
+            if (employees.length === 0) {
+                list.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #666;">No employees added yet</td></tr>';
+                return;
+            }
+            list.innerHTML = employees.map(emp => `
+                <tr>
+                    <td>${emp.name}</td>
+                    <td>${emp.role || '-'}</td>
+                    <td>$${emp.rate.toFixed(2)}</td>
+                    <td><button class="delete-btn" onclick="deleteEmployee(${emp.id})">Delete</button></td>
+                </tr>
+            `).join('');
+        }
+
+        function deleteEmployee(id) {
+            if (confirm('Delete this employee?')) {
+                employees = employees.filter(emp => emp.id !== id);
+                localStorage.setItem('employees', JSON.stringify(employees));
+                renderEmployees();
+                updateEmployeeSelects();
+            }
+        }
+
+        function updateEmployeeSelects() {
+            const selects = ['entryEmployee', 'reportEmployee', 'invoiceEmployee'];
+            const options = '<option value="">Select employee...</option>' +
+                employees.map(emp => `<option value="${emp.id}">${emp.name}</option>`).join('');
+            selects.forEach(id => document.getElementById(id).innerHTML = options);
+        }
+
+        // Time entry management
+        function addTimeEntry() {
+            const empId = document.getElementById('entryEmployee').value;
+            const date = document.getElementById('entryDate').value;
+            const inTime = document.getElementById('entryIn').value;
+            const outTime = document.getElementById('entryOut').value;
+            const project = document.getElementById('entryProject').value;
+            const notes = document.getElementById('entryNotes').value;
+
+            if (!empId || !date || !inTime || !outTime) {
+                alert('Please fill in all required fields');
                 return;
             }
 
-            if (state.users.some(u => u.email === email)) {
-                alert('Email already registered');
-                return;
-            }
+            const emp = employees.find(e => e.id == empId);
+            const hours = (new Date(`2000-01-01 ${outTime}`) - new Date(`2000-01-01 ${inTime}`)) / 3600000;
 
-            state.users.push({
-                email: email,
-                firstName: firstName,
-                lastName: lastName,
-                password: password,
+            timeEntries.push({
                 id: Date.now(),
-                employeeId: state.nextEmployeeId
+                empId,
+                empName: emp.name,
+                empRate: emp.rate,
+                date,
+                inTime,
+                outTime,
+                hours: Math.max(0, hours),
+                project,
+                notes
             });
-            state.employeeRates[email] = 0;
-            state.nextEmployeeId++;
-            saveData();
-            document.getElementById('signupFirstName').value = '';
-            document.getElementById('signupLastName').value = '';
-            document.getElementById('signupEmail').value = '';
-            document.getElementById('signupPassword').value = '';
-            document.getElementById('signupPasswordConfirm').value = '';
-            alert('Signup successful! You can now log in.');
-        });
 
-        // Admin Login
-        document.getElementById('adminLoginForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const password = document.getElementById('adminPassword').value;
-            if (password === 'admin123') {
-                state.currentUser = 'admin';
-                state.userRole = 'admin';
-                document.getElementById('adminPassword').value = '';
-                showView('admin');
-                renderAdmin();
-            } else {
-                alert('Incorrect admin password');
-            }
-        });
+            localStorage.setItem('timeEntries', JSON.stringify(timeEntries));
 
-        // Logout
-        document.getElementById('logoutBtn').addEventListener('click', function() {
-            state.currentUser = null;
-            state.userRole = null;
-            state.clockedIn = false;
-            state.clockInTime = null;
-            showView('login');
-        });
+            document.getElementById('entryEmployee').value = '';
+            document.getElementById('entryDate').value = '';
+            document.getElementById('entryIn').value = '';
+            document.getElementById('entryOut').value = '';
+            document.getElementById('entryProject').value = '';
+            document.getElementById('entryNotes').value = '';
 
-        // Clock In
-        document.getElementById('clockInBtn').addEventListener('click', function() {
-            if (!state.settings.allowAutoClocking) {
-                alert('Clocking is disabled');
+            renderTimeEntries();
+            generateReport();
+            updateInvoicePreview();
+        }
+
+        function renderTimeEntries() {
+            const list = document.getElementById('entriesList');
+            if (timeEntries.length === 0) {
+                list.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #666;">No entries yet</td></tr>';
                 return;
             }
-            state.clockedIn = true;
-            state.clockInTime = new Date();
-            document.getElementById('clockOutBtn').disabled = false;
-            document.getElementById('clockInBtn').disabled = true;
-            const statusEl = document.getElementById('clockedInStatus');
-            statusEl.textContent = '⏳ Clocked in since ' + formatTime(state.clockInTime);
-            statusEl.style.display = 'block';
-        });
-
-        // Clock Out
-        document.getElementById('clockOutBtn').addEventListener('click', function() {
-            if (state.clockInTime) {
-                const project = document.getElementById('projectInput').value;
-                const task = document.getElementById('taskInput').value;
-                state.timeEntries.push({
-                    email: state.currentUser,
-                    clockIn: state.clockInTime,
-                    clockOut: new Date(),
-                    project: project,
-                    task: task,
-                    id: Date.now()
-                });
-                saveData();
-                state.clockedIn = false;
-                state.clockInTime = null;
-                document.getElementById('projectInput').value = '';
-                document.getElementById('taskInput').value = '';
-                document.getElementById('clockOutBtn').disabled = true;
-                document.getElementById('clockInBtn').disabled = false;
-                document.getElementById('clockedInStatus').style.display = 'none';
-                alert('Clocked out successfully!');
-                renderDashboard();
-            }
-        });
-
-        // Manual Entry
-        document.getElementById('manualEntryForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const manualTime = document.getElementById('manualTime').value;
-            const project = document.getElementById('projectInput').value;
-            const task = document.getElementById('taskInput').value;
-            if (!manualTime) return;
-            state.timeEntries.push({
-                email: state.currentUser,
-                clockIn: new Date(manualTime),
-                clockOut: new Date(new Date(manualTime).getTime() + 3600000),
-                project: project,
-                task: task,
-                id: Date.now(),
-                isManual: true
-            });
-            saveData();
-            document.getElementById('manualTime').value = '';
-            document.getElementById('projectInput').value = '';
-            document.getElementById('taskInput').value = '';
-            alert('Time entry saved!');
-            renderDashboard();
-        });
-
-        // Download Time Summary as PDF
-        // Export Timesheet as JSON (with filtering)
-        document.getElementById('downloadSummaryBtn').addEventListener('click', function() {
-            const user = state.users.find(u => u.email === state.currentUser);
-            if (!user) {
-                showMessage('User not found');
-                return;
-            }
-
-            // Get filter values
-            const filterType = document.getElementById('employeeFilterTypeSelect')?.value || 'all';
-            const filterStart = document.getElementById('employeeFilterStartDate')?.value;
-            const filterEnd = document.getElementById('employeeFilterEndDate')?.value;
-
-            // Start with all entries for current user
-            let entries = state.timeEntries.filter(t => t.email === state.currentUser);
-
-            // Apply same filters as shown on screen
-            const today = new Date();
-            const startOfWeek = new Date(today);
-            startOfWeek.setDate(today.getDate() - today.getDay());
-            const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-
-            if (filterType === 'today') {
-                entries = entries.filter(e => {
-                    const entryDate = new Date(e.clockIn).toDateString();
-                    return entryDate === today.toDateString();
-                });
-            } else if (filterType === 'week') {
-                entries = entries.filter(e => {
-                    const entryDate = new Date(e.clockIn);
-                    return entryDate >= startOfWeek && entryDate <= today;
-                });
-            } else if (filterType === 'month') {
-                entries = entries.filter(e => {
-                    const entryDate = new Date(e.clockIn);
-                    return entryDate >= startOfMonth && entryDate <= today;
-                });
-            } else if (filterType === 'custom' && (filterStart || filterEnd)) {
-                const startDate = filterStart ? new Date(filterStart) : null;
-                const endDate = filterEnd ? new Date(filterEnd) : null;
-                entries = entries.filter(e => {
-                    const entryDate = new Date(e.clockIn);
-                    if (startDate && entryDate < startDate) return false;
-                    if (endDate) {
-                        endDate.setHours(23, 59, 59);
-                        if (entryDate > endDate) return false;
-                    }
-                    return true;
-                });
-            }
-
-            const fullName = `${user.firstName} ${user.lastName}`;
-            const empId = String(user.employeeId).padStart(5, '0');
-
-            // Add period info to export
-            let periodLabel = 'all-time';
-            if (filterType === 'today') periodLabel = 'today';
-            else if (filterType === 'week') periodLabel = 'this-week';
-            else if (filterType === 'month') periodLabel = 'this-month';
-            else if (filterType === 'custom' && (filterStart || filterEnd)) {
-                periodLabel = filterStart && filterEnd ? `${filterStart}-to-${filterEnd}` : 'custom-period';
-            }
-
-            const exportData = {
-                employee: {
-                    firstName: user.firstName,
-                    lastName: user.lastName,
-                    email: user.email,
-                    employeeId: empId
-                },
-                exportDate: new Date().toISOString(),
-                period: periodLabel,
-                entriesCount: entries.length,
-                timeEntries: entries.map(entry => ({
-                    id: entry.id,
-                    clockIn: entry.clockIn,
-                    clockOut: entry.clockOut,
-                    project: entry.project || '',
-                    task: entry.task || ''
-                }))
-            };
-
-            const jsonString = JSON.stringify(exportData, null, 2);
-            const blob = new Blob([jsonString], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `timesheet-${fullName.replace(/\s+/g, '-')}-${periodLabel}-${new Date().toISOString().split('T')[0]}.json`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-
-            showMessage(`Exported ${entries.length} timesheet entries!`);
-        });
-
-        // View Full Timesheet
-        document.getElementById('viewTimesheetBtn').addEventListener('click', function() {
-            document.getElementById('employeeFilterTypeSelect').value = 'week';
-            document.getElementById('employeeFilterStartDate').value = '';
-            document.getElementById('employeeFilterEndDate').value = '';
-            renderDashboard();
-        });
-
-        // Download Admin Timesheet Report as PDF
-        document.getElementById('downloadReportBtn').addEventListener('click', function() {
-            const reportFilterEmployee = document.getElementById('reportFilterEmployeeSelect')?.value;
-            const reportFilterType = document.getElementById('reportFilterTypeSelect')?.value || 'all';
-            const reportFilterStart = document.getElementById('reportFilterStartDate')?.value;
-            const reportFilterEnd = document.getElementById('reportFilterEndDate')?.value;
-
-            let reportEntries = [...state.timeEntries];
-            const today = new Date();
-            const startOfWeek = new Date(today);
-            startOfWeek.setDate(today.getDate() - today.getDay());
-            const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-
-            if (reportFilterEmployee) {
-                reportEntries = reportEntries.filter(e => e.email === reportFilterEmployee);
-            }
-
-            if (reportFilterType === 'today') {
-                reportEntries = reportEntries.filter(e => {
-                    const entryDate = new Date(e.clockIn).toDateString();
-                    return entryDate === today.toDateString();
-                });
-            } else if (reportFilterType === 'week') {
-                reportEntries = reportEntries.filter(e => {
-                    const entryDate = new Date(e.clockIn);
-                    return entryDate >= startOfWeek && entryDate <= today;
-                });
-            } else if (reportFilterType === 'month') {
-                reportEntries = reportEntries.filter(e => {
-                    const entryDate = new Date(e.clockIn);
-                    return entryDate >= startOfMonth && entryDate <= today;
-                });
-            } else if (reportFilterType === 'custom' && (reportFilterStart || reportFilterEnd)) {
-                const startDate = reportFilterStart ? new Date(reportFilterStart) : null;
-                const endDate = reportFilterEnd ? new Date(reportFilterEnd) : null;
-                reportEntries = reportEntries.filter(e => {
-                    const entryDate = new Date(e.clockIn);
-                    if (startDate && entryDate < startDate) return false;
-                    if (endDate) {
-                        endDate.setHours(23, 59, 59);
-                        if (entryDate > endDate) return false;
-                    }
-                    return true;
-                });
-            }
-
-            try {
-                const pdf = new jsPDF('p', 'mm', 'a4');
-                let yPos = 20;
-
-                // Title
-                pdf.setFontSize(18);
-                pdf.setTextColor(157, 212, 168);
-                pdf.text('📋 Timesheet Report', 20, yPos);
-                yPos += 10;
-
-                // Report period/filters
-                pdf.setFontSize(10);
-                pdf.setTextColor(240, 240, 240);
-                if (reportFilterEmployee) {
-                    const user = state.users.find(u => u.email === reportFilterEmployee);
-                    pdf.text(`Employee: ${user.firstName} ${user.lastName} (EMP #${String(user.employeeId).padStart(5, '0')})`, 20, yPos);
-                    yPos += 6;
-                }
-                pdf.text(`Generated: ${new Date().toLocaleDateString()}`, 20, yPos);
-                yPos += 10;
-
-                if (reportEntries.length === 0) {
-                    pdf.text('No time entries found', 20, yPos);
-                } else {
-                    // Summary
-                    let totalHours = 0;
-                    const summaryProjectBreakdown = {};
-
-                    reportEntries.forEach(entry => {
-                        const hours = parseFloat(calculateHours(entry));
-                        totalHours += hours;
-                        const proj = entry.project || 'Other';
-                        summaryProjectBreakdown[proj] = (summaryProjectBreakdown[proj] || 0) + hours;
-                    });
-
-                    pdf.setFontSize(12);
-                    pdf.setTextColor(157, 212, 168);
-                    pdf.text('Project Summary', 20, yPos);
-                    yPos += 8;
-
-                    pdf.setFontSize(9);
-                    pdf.setTextColor(240, 240, 240);
-                    Object.entries(summaryProjectBreakdown).forEach(([proj, hours]) => {
-                        pdf.text(`${proj}: ${hours.toFixed(2)}h`, 20, yPos);
-                        yPos += 5;
-                    });
-                    yPos += 5;
-
-                    // Detailed Entries
-                    pdf.setFontSize(12);
-                    pdf.setTextColor(157, 212, 168);
-                    pdf.text('Time Entries', 20, yPos);
-                    yPos += 8;
-
-                    pdf.setFontSize(9);
-                    pdf.setTextColor(157, 212, 168);
-                    pdf.text('Date', 20, yPos);
-                    pdf.text('Employee', 50, yPos);
-                    pdf.text('In', 95, yPos);
-                    pdf.text('Out', 115, yPos);
-                    pdf.text('Hours', 135, yPos, { align: 'right' });
-                    pdf.text('Project', 155, yPos);
-                    yPos += 6;
-
-                    pdf.setTextColor(240, 240, 240);
-                    reportEntries.forEach(entry => {
-                        const user = state.users.find(u => u.email === entry.email);
-                        const empName = user ? user.firstName.substring(0, 8) : entry.email.substring(0, 8);
-                        const timeIn = formatTime(entry.clockIn);
-                        const timeOut = formatTime(entry.clockOut);
-                        const hours = calculateHours(entry);
-                        const proj = (entry.project || '-').substring(0, 20);
-
-                        pdf.text(formatDate(entry.clockIn), 20, yPos);
-                        pdf.text(empName, 50, yPos);
-                        pdf.text(timeIn, 95, yPos);
-                        pdf.text(timeOut, 115, yPos);
-                        pdf.text(hours, 135, yPos, { align: 'right' });
-                        pdf.text(proj, 155, yPos);
-                        yPos += 5;
-
-                        if (yPos > 270) {
-                            pdf.addPage();
-                            yPos = 20;
-                        }
-                    });
-
-                    yPos += 8;
-                    pdf.setFontSize(12);
-                    pdf.setTextColor(157, 212, 168);
-                    pdf.text(`TOTAL HOURS: ${totalHours.toFixed(2)}`, 20, yPos);
-                }
-
-                pdf.save(`timesheet-report-${new Date().toISOString().split('T')[0]}.pdf`);
-                alert('Timesheet Report PDF downloaded successfully!');
-            } catch (error) {
-                console.error('Error generating PDF:', error);
-                alert('Error generating PDF');
-            }
-        });
-
-        // Render Dashboard
-        function renderDashboard() {
-            // Manual Entry Card
-            const manualEntryCard = document.getElementById('manualEntryCard');
-            if (state.settings.allowManualEntry) {
-                manualEntryCard.classList.remove('hidden');
-            } else {
-                manualEntryCard.classList.add('hidden');
-            }
-
-            // Set default filter to "week" on first load
-            const filterTypeSelect = document.getElementById('employeeFilterTypeSelect');
-            if (filterTypeSelect && !filterTypeSelect.value) {
-                filterTypeSelect.value = 'week';
-            }
-
-            // Clock In/Out Button States
-            if (state.clockedIn) {
-                document.getElementById('clockOutBtn').disabled = false;
-                document.getElementById('clockInBtn').disabled = true;
-            } else {
-                document.getElementById('clockOutBtn').disabled = true;
-                document.getElementById('clockInBtn').disabled = false;
-            }
-
-            // Get all entries for current user
-            let allEntries = state.timeEntries.filter(t => t.email === state.currentUser);
-
-            // Apply filters
-            let filteredEntries = [...allEntries];
-            const filterType = document.getElementById('employeeFilterTypeSelect')?.value || 'week';
-            const filterStart = document.getElementById('employeeFilterStartDate')?.value;
-            const filterEnd = document.getElementById('employeeFilterEndDate')?.value;
-
-            const today = new Date();
-            const startOfWeek = new Date(today);
-            startOfWeek.setDate(today.getDate() - today.getDay());
-            const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-
-            if (filterType === 'today') {
-                filteredEntries = filteredEntries.filter(e => {
-                    const entryDate = new Date(e.clockIn).toDateString();
-                    return entryDate === today.toDateString();
-                });
-            } else if (filterType === 'week') {
-                filteredEntries = filteredEntries.filter(e => {
-                    const entryDate = new Date(e.clockIn);
-                    return entryDate >= startOfWeek && entryDate <= today;
-                });
-            } else if (filterType === 'month') {
-                filteredEntries = filteredEntries.filter(e => {
-                    const entryDate = new Date(e.clockIn);
-                    return entryDate >= startOfMonth && entryDate <= today;
-                });
-            } else if (filterType === 'custom' && (filterStart || filterEnd)) {
-                const startDate = filterStart ? new Date(filterStart) : null;
-                const endDate = filterEnd ? new Date(filterEnd) : null;
-                filteredEntries = filteredEntries.filter(e => {
-                    const entryDate = new Date(e.clockIn);
-                    if (startDate && entryDate < startDate) return false;
-                    if (endDate) {
-                        endDate.setHours(23, 59, 59);
-                        if (entryDate > endDate) return false;
-                    }
-                    return true;
-                });
-            }
-
-            // Render entries
-            let html = '';
-            if (filteredEntries.length === 0) {
-                html = '<p style="color: #888; font-size: 14px;">No time entries found for selected period</p>';
-            } else {
-                let totalHours = 0;
-                filteredEntries.forEach(entry => {
-                    const hours = parseFloat(calculateHours(entry));
-                    totalHours += hours;
-                    html += `
-                        <div class="time-entry">
-                            <div class="entry-header">
-                                <span>${formatDate(entry.clockIn)}</span>
-                                <span class="entry-time">${formatTime(entry.clockIn)} - ${formatTime(entry.clockOut)} (${calculateHours(entry)}h)</span>
-                            </div>
-                            <p style="color: var(--text-secondary);">📁 ${entry.project || 'No project'}</p>
-                            <p style="color: var(--text-tertiary); margin-bottom: 8px;">✓ ${entry.task || 'No task details'}</p>
-                            <button class="button button-secondary" style="font-size: 12px; padding: 8px 12px;" onclick="openEditRequestModal(${entry.id})">✏️ Request Edit</button>
-                        </div>
-                    `;
-                });
-                html += `<div style="background: var(--bg-entry); padding: 12px; border-radius: 8px; margin-top: 12px; text-align: right; font-weight: 600; color: var(--label-color);">Period Total: ${totalHours.toFixed(2)} hours</div>`;
-            }
-            document.getElementById('employeeTimeEntries').innerHTML = html;
-
-            // Add filter event listeners
-            const filterElements = ['employeeFilterTypeSelect', 'employeeFilterStartDate', 'employeeFilterEndDate'];
-            filterElements.forEach(id => {
-                const elem = document.getElementById(id);
-                if (elem) {
-                    elem.removeEventListener('change', renderDashboard);
-                    elem.addEventListener('change', renderDashboard);
-                }
-            });
+            list.innerHTML = timeEntries
+                .sort((a, b) => new Date(b.date) - new Date(a.date))
+                .map(entry => `
+                <tr>
+                    <td>${entry.date}</td>
+                    <td>${entry.empName}</td>
+                    <td>${entry.inTime}</td>
+                    <td>${entry.outTime}</td>
+                    <td class="text-right">${entry.hours.toFixed(2)}</td>
+                    <td>${entry.project}</td>
+                    <td><button class="delete-btn" onclick="deleteTimeEntry(${entry.id})">Delete</button></td>
+                </tr>
+            `).join('');
         }
 
-        // Admin Tab Switching
-        function switchAdminTab(tab) {
-            document.querySelectorAll('#adminView .card').forEach(card => card.classList.add('hidden'));
-            document.querySelectorAll('#adminView .tab-button').forEach(btn => btn.classList.remove('active'));
-
-            if (tab === 'settings') {
-                document.getElementById('settingsTab').classList.remove('hidden');
-            } else if (tab === 'employees') {
-                document.getElementById('employeesTab').classList.remove('hidden');
-            } else if (tab === 'entries') {
-                document.getElementById('entriesTab').classList.remove('hidden');
-            } else if (tab === 'report') {
-                document.getElementById('reportTab').classList.remove('hidden');
-            } else if (tab === 'invoices') {
-                document.getElementById('invoicesTab').classList.remove('hidden');
-            }
-
-            event.target.classList.add('active');
-            renderAdmin();
-        }
-
-        // Export Data
-        document.getElementById('exportDataBtn').addEventListener('click', function() {
-            const dataToExport = {
-                users: state.users,
-                timeEntries: state.timeEntries,
-                settings: state.settings,
-                employeeRates: state.employeeRates,
-                nextEmployeeId: state.nextEmployeeId,
-                exportedAt: new Date().toISOString()
-            };
-            const dataStr = JSON.stringify(dataToExport, null, 2);
-            const blob = new Blob([dataStr], { type: 'application/json' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `timetracker-backup-${new Date().toISOString().split('T')[0]}.json`;
-            a.click();
-            window.URL.revokeObjectURL(url);
-            alert('Data exported successfully!');
-        });
-
-        // Import Data
-        document.getElementById('importDataBtn').addEventListener('click', function() {
-            document.getElementById('importFileInput').click();
-        });
-
-        document.getElementById('importFileInput').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                try {
-                    const importedData = JSON.parse(event.target.result);
-
-                    // Merge imported data with existing data
-                    // Add new users (avoid duplicates)
-                    importedData.users.forEach(importedUser => {
-                        if (!state.users.find(u => u.email === importedUser.email)) {
-                            state.users.push(importedUser);
-                        }
-                    });
-
-                    // Add new time entries (avoid duplicates by ID)
-                    importedData.timeEntries.forEach(importedEntry => {
-                        if (!state.timeEntries.find(e => e.id === importedEntry.id)) {
-                            state.timeEntries.push(importedEntry);
-                        }
-                    });
-
-                    // Merge employee rates
-                    Object.assign(state.employeeRates, importedData.employeeRates || {});
-
-                    // Update next employee ID if needed
-                    if (importedData.nextEmployeeId > state.nextEmployeeId) {
-                        state.nextEmployeeId = importedData.nextEmployeeId;
-                    }
-
-                    saveData();
-                    renderAdmin();
-                    alert(`Data imported successfully! Added ${importedData.users.length} employee(s) and ${importedData.timeEntries.length} time entry(ies).`);
-                    document.getElementById('importFileInput').value = '';
-                } catch (error) {
-                    alert('Error importing file. Make sure it\'s a valid backup file.');
-                    console.error(error);
-                }
-            };
-            reader.readAsText(file);
-        });
-
-        // Render Admin
-        function renderAdmin() {
-            // Settings Tab
-            document.getElementById('allowAutoClocking').checked = state.settings.allowAutoClocking;
-            document.getElementById('allowManualEntry').checked = state.settings.allowManualEntry;
-
-            document.getElementById('allowAutoClocking').addEventListener('change', function() {
-                state.settings.allowAutoClocking = this.checked;
-                saveData();
-            });
-
-            document.getElementById('allowManualEntry').addEventListener('change', function() {
-                state.settings.allowManualEntry = this.checked;
-                saveData();
-            });
-
-            // Employees Tab
-            let employeeHtml = '';
-            if (state.users.length === 0) {
-                employeeHtml = '<p style="color: #888; font-size: 14px;">No employees registered yet</p>';
-            } else {
-                state.users.forEach(user => {
-                    const rate = state.employeeRates[user.email] || 0;
-                    const fullName = `${user.firstName} ${user.lastName}`;
-                    const empId = String(user.employeeId).padStart(5, '0');
-                    employeeHtml += `
-                        <div class="time-entry" style="border-left-color: #f4c0d1;">
-                            <div style="display: flex; gap: 12px; align-items: center; margin-bottom: 8px;">
-                                <span style="font-weight: 600; color: var(--label-color); font-size: 12px; background: rgba(168, 213, 186, 0.2); padding: 4px 8px; border-radius: 4px;">EMP #${empId}</span>
-                                <span style="font-weight: 600; color: #993556; flex: 1;">👤 ${fullName}</span>
-                                <span style="color: var(--text-tertiary); font-size: 12px;">📧 ${user.email}</span>
-                            </div>
-                            <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 8px;">
-                                <label style="color: var(--label-color); font-weight: 500; font-size: 13px; flex: 0;">Hourly Rate: $</label>
-                                <input type="number" class="employee-rate-input" data-email="${user.email}" value="${rate}" step="0.01" min="0" placeholder="0.00" style="flex: 0; width: 120px; padding: 8px;">
-                                <span style="color: var(--entry-text); font-weight: 600; font-size: 14px;">
-                                    ${rate ? `$${parseFloat(rate).toFixed(2)}/hr` : 'Not set'}
-                                </span>
-                            </div>
-                            <div style="display: flex; gap: 8px;">
-                                <button class="button button-secondary" style="font-size: 12px; padding: 8px 12px;" onclick="exportEmployeeTimesheet('${user.email}')">📤 Export Timesheet</button>
-                                <button class="button button-secondary" style="font-size: 12px; padding: 8px 12px;" onclick="openInvoiceModal('${user.email}')">📄 Generate Invoice</button>
-                            </div>
-                        </div>
-                    `;
-                });
-            }
-            document.getElementById('employeeRatesList').innerHTML = employeeHtml;
-
-            document.querySelectorAll('.employee-rate-input').forEach(input => {
-                input.addEventListener('change', function() {
-                    const email = this.dataset.email;
-                    state.employeeRates[email] = parseFloat(this.value) || 0;
-                    saveData();
-                    renderAdmin();
-                });
-            });
-
-            // Entries Tab - Populate Employee Filter
-            const employeeSelect = document.getElementById('filterEmployeeSelect');
-            if (employeeSelect) {
-                const currentValue = employeeSelect.value;
-                employeeSelect.innerHTML = '<option value="">All Employees</option>';
-                state.users.forEach(user => {
-                    const empId = String(user.employeeId).padStart(5, '0');
-                    const fullName = `${user.firstName} ${user.lastName}`;
-                    employeeSelect.innerHTML += `<option value="${user.email}">${fullName} (EMP #${empId})</option>`;
-                });
-                employeeSelect.value = currentValue;
-            }
-
-            // Entries Tab - Filter Logic
-            let filteredEntries = [...state.timeEntries];
-            const filterEmployee = document.getElementById('filterEmployeeSelect')?.value;
-            const filterType = document.getElementById('filterTypeSelect')?.value || 'all';
-            const filterStart = document.getElementById('filterStartDate')?.value;
-            const filterEnd = document.getElementById('filterEndDate')?.value;
-
-            if (filterEmployee) {
-                filteredEntries = filteredEntries.filter(e => e.email === filterEmployee);
-            }
-
-            const today = new Date();
-            const startOfWeek = new Date(today);
-            startOfWeek.setDate(today.getDate() - today.getDay());
-            const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-
-            if (filterType === 'today') {
-                filteredEntries = filteredEntries.filter(e => {
-                    const entryDate = new Date(e.clockIn).toDateString();
-                    return entryDate === today.toDateString();
-                });
-            } else if (filterType === 'week') {
-                filteredEntries = filteredEntries.filter(e => {
-                    const entryDate = new Date(e.clockIn);
-                    return entryDate >= startOfWeek && entryDate <= today;
-                });
-            } else if (filterType === 'month') {
-                filteredEntries = filteredEntries.filter(e => {
-                    const entryDate = new Date(e.clockIn);
-                    return entryDate >= startOfMonth && entryDate <= today;
-                });
-            } else if (filterType === 'custom' && (filterStart || filterEnd)) {
-                const startDate = filterStart ? new Date(filterStart) : null;
-                const endDate = filterEnd ? new Date(filterEnd) : null;
-                filteredEntries = filteredEntries.filter(e => {
-                    const entryDate = new Date(e.clockIn);
-                    if (startDate && entryDate < startDate) return false;
-                    if (endDate) {
-                        endDate.setHours(23, 59, 59);
-                        if (entryDate > endDate) return false;
-                    }
-                    return true;
-                });
-            }
-
-            // Entries Tab - Render
-            let entriesHtml = '';
-            if (filteredEntries.length === 0) {
-                entriesHtml = '<p style="color: #888; font-size: 14px;">No time entries found</p>';
-            } else {
-                filteredEntries.forEach(entry => {
-                    const user = state.users.find(u => u.email === entry.email);
-                    const fullName = user ? `${user.firstName} ${user.lastName}` : entry.email;
-                    const empId = user ? String(user.employeeId).padStart(5, '0') : 'N/A';
-                    entriesHtml += `
-                        <div class="time-entry">
-                            <div class="entry-header">
-                                <div style="display: flex; gap: 8px; align-items: center;">
-                                    <span style="font-weight: 600; font-size: 12px; background: rgba(168, 213, 186, 0.2); padding: 2px 6px; border-radius: 3px;">EMP #${empId}</span>
-                                    <span style="font-weight: 600; color: var(--label-color);">${fullName}</span>
-                                </div>
-                                <span class="entry-time">${formatDate(entry.clockIn)} ${formatTime(entry.clockIn)} - ${formatTime(entry.clockOut)} (${calculateHours(entry)}h)</span>
-                            </div>
-                            <p style="color: var(--text-secondary);">📁 ${entry.project || 'No project'}</p>
-                            <p style="color: var(--text-tertiary); margin-bottom: 8px;">✓ ${entry.task || 'No task details'}</p>
-                            <div style="display: flex; gap: 8px;">
-                                <button class="button button-secondary" style="font-size: 12px; padding: 8px 12px;" onclick="startEditEntry(${entry.id})">✏️ Edit Entry</button>
-                                <button class="button button-secondary" style="font-size: 12px; padding: 8px 12px; background-color: #d9534f; color: white; border-color: #c9302c;" onclick="deleteTimeEntry(${entry.id})">🗑️ Delete</button>
-                            </div>
-                        </div>
-                    `;
-                });
-            }
-            document.getElementById('allTimeEntriesList').innerHTML = entriesHtml;
-
-            // Entries Tab - Event Listeners
-            const filterSelects = ['filterEmployeeSelect', 'filterTypeSelect', 'filterStartDate', 'filterEndDate'];
-            filterSelects.forEach(id => {
-                const elem = document.getElementById(id);
-                if (elem) {
-                    elem.removeEventListener('change', renderAdmin);
-                    elem.addEventListener('change', renderAdmin);
-                }
-            });
-
-            // Timesheet Report Tab - Populate Employee Filter
-            const reportEmployeeSelect = document.getElementById('reportFilterEmployeeSelect');
-            if (reportEmployeeSelect) {
-                const currentValue = reportEmployeeSelect.value;
-                reportEmployeeSelect.innerHTML = '<option value="">All Employees</option>';
-                state.users.forEach(user => {
-                    const empId = String(user.employeeId).padStart(5, '0');
-                    const fullName = `${user.firstName} ${user.lastName}`;
-                    reportEmployeeSelect.innerHTML += `<option value="${user.email}">${fullName} (EMP #${empId})</option>`;
-                });
-                reportEmployeeSelect.value = currentValue;
-            }
-
-            // Timesheet Report Tab - Filter Logic
-            let reportEntries = [...state.timeEntries];
-            const reportFilterEmployee = document.getElementById('reportFilterEmployeeSelect')?.value;
-            const reportFilterType = document.getElementById('reportFilterTypeSelect')?.value || 'all';
-            const reportFilterStart = document.getElementById('reportFilterStartDate')?.value;
-            const reportFilterEnd = document.getElementById('reportFilterEndDate')?.value;
-
-            if (reportFilterEmployee) {
-                reportEntries = reportEntries.filter(e => e.email === reportFilterEmployee);
-            }
-
-            if (reportFilterType === 'today') {
-                reportEntries = reportEntries.filter(e => {
-                    const entryDate = new Date(e.clockIn).toDateString();
-                    return entryDate === today.toDateString();
-                });
-            } else if (reportFilterType === 'week') {
-                reportEntries = reportEntries.filter(e => {
-                    const entryDate = new Date(e.clockIn);
-                    return entryDate >= startOfWeek && entryDate <= today;
-                });
-            } else if (reportFilterType === 'month') {
-                reportEntries = reportEntries.filter(e => {
-                    const entryDate = new Date(e.clockIn);
-                    return entryDate >= startOfMonth && entryDate <= today;
-                });
-            } else if (reportFilterType === 'custom' && (reportFilterStart || reportFilterEnd)) {
-                const startDate = reportFilterStart ? new Date(reportFilterStart) : null;
-                const endDate = reportFilterEnd ? new Date(reportFilterEnd) : null;
-                reportEntries = reportEntries.filter(e => {
-                    const entryDate = new Date(e.clockIn);
-                    if (startDate && entryDate < startDate) return false;
-                    if (endDate) {
-                        endDate.setHours(23, 59, 59);
-                        if (entryDate > endDate) return false;
-                    }
-                    return true;
-                });
-            }
-
-            // Timesheet Report Tab - Render
-            let reportHtml = '';
-            if (reportEntries.length === 0) {
-                reportHtml = '<p style="color: #888; font-size: 14px;">No time entries found</p>';
-            } else {
-                let totalReportHours = 0;
-                const reportProjectBreakdown = {};
-
-                reportEntries.forEach(entry => {
-                    const hours = parseFloat(calculateHours(entry));
-                    totalReportHours += hours;
-                    const proj = entry.project || 'Other';
-                    reportProjectBreakdown[proj] = (reportProjectBreakdown[proj] || 0) + hours;
-                });
-
-                reportHtml = '<div style="background: var(--bg-entry); padding: 12px; border-radius: 8px; margin-bottom: 16px;"><strong>Project Breakdown:</strong><br>';
-                Object.entries(reportProjectBreakdown).forEach(([proj, hours]) => {
-                    reportHtml += `${proj}: ${hours.toFixed(2)}h<br>`;
-                });
-                reportHtml += `<strong>Total Hours: ${totalReportHours.toFixed(2)}h</strong></div>`;
-
-                reportHtml += '<div style="max-height: 400px; overflow-y: auto;">';
-                reportEntries.forEach(entry => {
-                    const user = state.users.find(u => u.email === entry.email);
-                    const fullName = user ? `${user.firstName} ${user.lastName}` : entry.email;
-                    const empId = user ? String(user.employeeId).padStart(5, '0') : 'N/A';
-                    reportHtml += `
-                        <div class="time-entry">
-                            <div class="entry-header">
-                                <div style="display: flex; gap: 8px; align-items: center;">
-                                    <span style="font-weight: 600; font-size: 12px; background: rgba(168, 213, 186, 0.2); padding: 2px 6px; border-radius: 3px;">EMP #${empId}</span>
-                                    <span style="font-weight: 600; color: var(--label-color);">${fullName}</span>
-                                </div>
-                                <span class="entry-time">${formatDate(entry.clockIn)} ${formatTime(entry.clockIn)} - ${formatTime(entry.clockOut)} (${calculateHours(entry)}h)</span>
-                            </div>
-                            <p style="color: var(--text-secondary); margin: 4px 0;">📁 ${entry.project || 'No project'}</p>
-                            <p style="color: var(--text-tertiary); margin: 0;">✓ ${entry.task || 'No task details'}</p>
-                        </div>
-                    `;
-                });
-                reportHtml += '</div>';
-            }
-            document.getElementById('timesheetReportList').innerHTML = reportHtml;
-
-            // Timesheet Report - Event Listeners
-            const reportFilterSelects = ['reportFilterEmployeeSelect', 'reportFilterTypeSelect', 'reportFilterStartDate', 'reportFilterEndDate'];
-            reportFilterSelects.forEach(id => {
-                const elem = document.getElementById(id);
-                if (elem) {
-                    elem.removeEventListener('change', renderAdmin);
-                    elem.addEventListener('change', renderAdmin);
-                }
-            });
-
-            // Invoices Tab
-            let invoicesHtml = '';
-            state.users.forEach(user => {
-                const userEntries = state.timeEntries.filter(t => t.email === user.email);
-                if (userEntries.length === 0) return;
-
-                let totalHours = 0;
-                userEntries.forEach(e => totalHours += parseFloat(calculateHours(e)));
-                const rate = state.employeeRates[user.email] || 0;
-                const totalAmount = totalHours * rate;
-                const empId = String(user.employeeId).padStart(5, '0');
-
-                invoicesHtml += `
-                    <div class="invoice-item">
-                        <div class="invoice-details">
-                            <p style="display: flex; gap: 8px; align-items: center;">
-                                <span style="font-weight: 600; font-size: 12px; background: rgba(168, 213, 186, 0.2); padding: 2px 6px; border-radius: 3px;">EMP #${empId}</span>
-                                <span>${user.firstName} ${user.lastName}</span>
-                            </p>
-                            <p style="color: var(--text-tertiary);">📧 ${user.email}</p>
-                            <p style="color: var(--text-secondary);">Total: ${totalHours.toFixed(2)}h @ $${rate.toFixed(2)}/hr = <span class="amount">$${totalAmount.toFixed(2)}</span></p>
-                        </div>
-                        <button class="button button-primary" onclick="openInvoiceModal('${user.email}')">📥 PDF Invoice</button>
-                    </div>
-                `;
-            });
-
-            if (invoicesHtml === '') {
-                invoicesHtml = '<p style="color: #888; font-size: 14px;">No employees with time entries yet</p>';
-            }
-            document.getElementById('invoicesList').innerHTML = invoicesHtml;
-        }
-
-        // Edit Entry
-        function startEditEntry(entryId) {
-            state.editingEntry = state.timeEntries.find(e => e.id === entryId);
-            if (state.editingEntry) {
-                // Convert dates to datetime-local format
-                const clockInDate = new Date(state.editingEntry.clockIn);
-                const clockOutDate = new Date(state.editingEntry.clockOut);
-
-                const formatDateTimeLocal = (date) => {
-                    const year = date.getFullYear();
-                    const month = String(date.getMonth() + 1).padStart(2, '0');
-                    const day = String(date.getDate()).padStart(2, '0');
-                    const hours = String(date.getHours()).padStart(2, '0');
-                    const minutes = String(date.getMinutes()).padStart(2, '0');
-                    return `${year}-${month}-${day}T${hours}:${minutes}`;
-                };
-
-                document.getElementById('editedClockIn').value = formatDateTimeLocal(clockInDate);
-                document.getElementById('editedClockOut').value = formatDateTimeLocal(clockOutDate);
-                document.getElementById('editedProject').value = state.editingEntry.project || '';
-                document.getElementById('editedTask').value = state.editingEntry.task || '';
-                document.getElementById('editEntryCard').classList.remove('hidden');
+        function deleteTimeEntry(id) {
+            if (confirm('Delete this entry?')) {
+                timeEntries = timeEntries.filter(e => e.id !== id);
+                localStorage.setItem('timeEntries', JSON.stringify(timeEntries));
+                renderTimeEntries();
+                generateReport();
+                updateInvoicePreview();
             }
         }
 
-        function deleteTimeEntry(entryId) {
-            if (confirm('Are you sure you want to delete this time entry? This action cannot be undone.')) {
-                state.timeEntries = state.timeEntries.filter(e => e.id !== entryId);
-                saveData();
-                showMessage('Time entry deleted successfully');
-                renderAdmin();
-            }
-        }
+        // Report generation
+        function generateReport() {
+            const empId = document.getElementById('reportEmployee').value;
+            const startDate = document.getElementById('reportStartDate').value;
+            const endDate = document.getElementById('reportEndDate').value;
 
-        function openAddEntryModal() {
-            // Populate employee dropdown
-            const employeeSelect = document.getElementById('addEntryEmployee');
-            employeeSelect.innerHTML = '<option value="">Select Employee</option>';
-            state.users.forEach(user => {
-                const empId = String(user.employeeId).padStart(5, '0');
-                const fullName = `${user.firstName} ${user.lastName}`;
-                employeeSelect.innerHTML += `<option value="${user.email}">${fullName} (EMP #${empId})</option>`;
-            });
-
-            // Clear form fields
-            employeeSelect.value = '';
-            document.getElementById('addClockIn').value = '';
-            document.getElementById('addClockOut').value = '';
-            document.getElementById('addProject').value = '';
-            document.getElementById('addTask').value = '';
-
-            document.getElementById('addEntryCard').classList.remove('hidden');
-        }
-
-        function closeAddEntryModal() {
-            document.getElementById('addEntryCard').classList.add('hidden');
-            document.getElementById('addEntryEmployee').value = '';
-            document.getElementById('addClockIn').value = '';
-            document.getElementById('addClockOut').value = '';
-            document.getElementById('addProject').value = '';
-            document.getElementById('addTask').value = '';
-        }
-
-        document.getElementById('saveAddEntryBtn').addEventListener('click', function() {
-            const email = document.getElementById('addEntryEmployee').value;
-            const clockInVal = document.getElementById('addClockIn').value;
-            const clockOutVal = document.getElementById('addClockOut').value;
-            const project = document.getElementById('addProject').value;
-            const task = document.getElementById('addTask').value;
-
-            if (!email) {
-                showMessage('Please select an employee');
-                return;
-            }
-
-            if (!clockInVal || !clockOutVal) {
-                showMessage('Please fill in both clock in and clock out times');
-                return;
-            }
-
-            const clockIn = new Date(clockInVal);
-            const clockOut = new Date(clockOutVal);
-
-            if (clockOut <= clockIn) {
-                showMessage('Clock out time must be after clock in time');
-                return;
-            }
-
-            const newEntry = {
-                id: Math.max(...state.timeEntries.map(e => e.id), 0) + 1,
-                email: email,
-                clockIn: clockIn,
-                clockOut: clockOut,
-                project: project || 'Other',
-                task: task || '',
-                isManual: true
-            };
-
-            state.timeEntries.push(newEntry);
-            saveData();
-            showMessage('Time entry added successfully');
-            closeAddEntryModal();
-            renderAdmin();
-        });
-
-        document.getElementById('cancelAddEntryBtn').addEventListener('click', function() {
-            closeAddEntryModal();
-        });
-
-        document.getElementById('saveEditBtn').addEventListener('click', function() {
-            if (state.editingEntry) {
-                const clockInVal = document.getElementById('editedClockIn').value;
-                const clockOutVal = document.getElementById('editedClockOut').value;
-                const project = document.getElementById('editedProject').value;
-                const task = document.getElementById('editedTask').value;
-
-                if (!clockInVal || !clockOutVal) {
-                    alert('Please fill in both clock in and clock out times');
-                    return;
-                }
-
-                const clockIn = new Date(clockInVal);
-                const clockOut = new Date(clockOutVal);
-
-                if (clockOut <= clockIn) {
-                    alert('Clock out time must be after clock in time');
-                    return;
-                }
-
-                state.editingEntry.clockIn = clockIn;
-                state.editingEntry.clockOut = clockOut;
-                state.editingEntry.project = project;
-                state.editingEntry.task = task;
-
-                saveData();
-                state.editingEntry = null;
-                document.getElementById('editEntryCard').classList.add('hidden');
-                document.getElementById('editedClockIn').value = '';
-                document.getElementById('editedClockOut').value = '';
-                document.getElementById('editedProject').value = '';
-                document.getElementById('editedTask').value = '';
-                alert('Entry updated!');
-                renderAdmin();
-            }
-        });
-
-        document.getElementById('cancelEditBtn').addEventListener('click', function() {
-            state.editingEntry = null;
-            document.getElementById('editEntryCard').classList.add('hidden');
-            document.getElementById('editedClockIn').value = '';
-            document.getElementById('editedClockOut').value = '';
-            document.getElementById('editedProject').value = '';
-            document.getElementById('editedTask').value = '';
-        });
-
-        // Export Employee Timesheet as JSON (Admin function)
-        function exportEmployeeTimesheet(email) {
-            const user = state.users.find(u => u.email === email);
-            if (!user) {
-                showMessage('Employee not found');
-                return;
-            }
-
-            const entries = state.timeEntries.filter(t => t.email === email);
-            const fullName = `${user.firstName} ${user.lastName}`;
-            const empId = String(user.employeeId).padStart(5, '0');
-
-            const exportData = {
-                employee: {
-                    firstName: user.firstName,
-                    lastName: user.lastName,
-                    email: user.email,
-                    employeeId: empId
-                },
-                exportDate: new Date().toISOString(),
-                timeEntries: entries.map(entry => ({
-                    id: entry.id,
-                    clockIn: entry.clockIn,
-                    clockOut: entry.clockOut,
-                    project: entry.project || '',
-                    task: entry.task || ''
-                }))
-            };
-
-            const jsonString = JSON.stringify(exportData, null, 2);
-            const blob = new Blob([jsonString], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `timesheet-${fullName.replace(/\s+/g, '-')}-${new Date().toISOString().split('T')[0]}.json`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-
-            showMessage(`Exported timesheet for ${fullName}`);
-        }
-
-        // Invoice Modal
-        function openInvoiceModal(email) {
-            const entries = state.timeEntries.filter(t => t.email === email);
-            state.currentInvoiceEmployee = email;
-            state.currentInvoiceEntries = entries;
-            document.getElementById('invoiceTitle').value = '';
-            document.getElementById('invoiceStartDate').value = '';
-            document.getElementById('invoiceEndDate').value = '';
-            document.getElementById('invoiceDescription').value = '';
-            document.getElementById('invoiceModal').classList.add('show');
-        }
-
-        function closeInvoiceModal() {
-            document.getElementById('invoiceModal').classList.remove('show');
-            state.currentInvoiceEmployee = null;
-            state.currentInvoiceEntries = null;
-        }
-
-        // Edit Request Modal
-        function openEditRequestModal(entryId) {
-            state.editRequestEntry = state.timeEntries.find(e => e.id === entryId);
-            if (state.editRequestEntry) {
-                const clockInDate = new Date(state.editRequestEntry.clockIn);
-                const clockOutDate = new Date(state.editRequestEntry.clockOut);
-
-                const formatDateTimeLocal = (date) => {
-                    const year = date.getFullYear();
-                    const month = String(date.getMonth() + 1).padStart(2, '0');
-                    const day = String(date.getDate()).padStart(2, '0');
-                    const hours = String(date.getHours()).padStart(2, '0');
-                    const minutes = String(date.getMinutes()).padStart(2, '0');
-                    return `${year}-${month}-${day}T${hours}:${minutes}`;
-                };
-
-                document.getElementById('editRequestClockIn').value = formatDateTimeLocal(clockInDate);
-                document.getElementById('editRequestClockOut').value = formatDateTimeLocal(clockOutDate);
-                document.getElementById('editRequestReason').value = '';
-
-                // Show current entry details
-                const details = `
-                    <strong>Current Entry Details:</strong><br>
-                    📅 ${formatDate(state.editRequestEntry.clockIn)}<br>
-                    🕐 ${formatTime(state.editRequestEntry.clockIn)} - ${formatTime(state.editRequestEntry.clockOut)} (${calculateHours(state.editRequestEntry)}h)<br>
-                    📁 ${state.editRequestEntry.project || 'No project'}<br>
-                    ✓ ${state.editRequestEntry.task || 'No task'}
-                `;
-                document.getElementById('editRequestDetails').innerHTML = details;
-                document.getElementById('editRequestModal').classList.add('show');
-            }
-        }
-
-        function closeEditRequestModal() {
-            document.getElementById('editRequestModal').classList.remove('show');
-            document.getElementById('editRequestClockIn').value = '';
-            document.getElementById('editRequestClockOut').value = '';
-            document.getElementById('editRequestReason').value = '';
-            state.editRequestEntry = null;
-        }
-
-        function submitEditRequest() {
-            if (!state.editRequestEntry) return;
-
-            const user = state.users.find(u => u.email === state.currentUser);
-            const fullName = user ? `${user.firstName} ${user.lastName}` : state.currentUser;
-            const empId = user ? String(user.employeeId).padStart(5, '0') : 'N/A';
-
-            const clockInVal = document.getElementById('editRequestClockIn').value;
-            const clockOutVal = document.getElementById('editRequestClockOut').value;
-            const reason = document.getElementById('editRequestReason').value;
-
-            if (!clockInVal || !clockOutVal) {
-                alert('Please fill in both clock in and clock out times');
-                return;
-            }
-
-            const clockIn = new Date(clockInVal);
-            const clockOut = new Date(clockOutVal);
-
-            if (clockOut <= clockIn) {
-                alert('Clock out time must be after clock in time');
-                return;
-            }
-
-            const currentEntry = state.editRequestEntry;
-            const originalHours = calculateHours(currentEntry);
-            const newHours = ((clockOut - clockIn) / (1000 * 60 * 60)).toFixed(2);
-
-            // Generate email content
-            const emailSubject = encodeURIComponent(`Timesheet Edit Request - ${fullName} (EMP #${empId})`);
-            const emailBody = encodeURIComponent(
-                `TIMESHEET EDIT REQUEST\n\n` +
-                `Employee: ${fullName}\n` +
-                `Employee ID: EMP #${empId}\n` +
-                `Email: ${state.currentUser}\n` +
-                `Date Submitted: ${new Date().toLocaleDateString()}\n` +
-                `\n=== CURRENT ENTRY ===\n` +
-                `Date: ${formatDate(currentEntry.clockIn)}\n` +
-                `Clock In: ${formatTime(currentEntry.clockIn)}\n` +
-                `Clock Out: ${formatTime(currentEntry.clockOut)}\n` +
-                `Hours: ${originalHours}h\n` +
-                `Project: ${currentEntry.project || 'None'}\n` +
-                `Task: ${currentEntry.task || 'None'}\n` +
-                `\n=== REQUESTED CORRECTION ===\n` +
-                `Correct Clock In: ${formatTime(clockIn)}\n` +
-                `Correct Clock Out: ${formatTime(clockOut)}\n` +
-                `Corrected Hours: ${newHours}h\n` +
-                `\n=== REASON FOR EDIT ===\n` +
-                `${reason || 'No reason provided'}\n` +
-                `\nPlease review and approve/reject this request.`
+            const filtered = timeEntries.filter(e =>
+                (!empId || e.empId == empId) &&
+                (!startDate || e.date >= startDate) &&
+                (!endDate || e.date <= endDate)
             );
 
-            // Create mailto link
-            const mailtoLink = `mailto:lcruz.work@outlook.com?subject=${emailSubject}&body=${emailBody}`;
+            const emp = empId ? employees.find(e => e.id == empId) : null;
+            const totalHours = filtered.reduce((sum, e) => sum + e.hours, 0);
+            const totalAmount = totalHours * (emp?.rate || 0);
 
-            // Open email client
-            window.location.href = mailtoLink;
-
-            // Close modal and reset
-            closeEditRequestModal();
-            alert('Email client will open with your edit request. Please send the email to complete the request.');
-        }
-
-        // Generate PDF Invoice using jsPDF directly
-        function generateInvoicePDF() {
-            const midnightBlue = [26, 26, 46];
-            const lightBlue = [230, 230, 240];
-
-            const email = state.currentInvoiceEmployee;
-            let entries = state.currentInvoiceEntries;
-            const user = state.users.find(u => u.email === email);
-            const rate = state.employeeRates[email] || 0;
-            const invoiceTitle = document.getElementById('invoiceTitle').value || 'Invoice';
-            const invoiceDescription = document.getElementById('invoiceDescription').value;
-            const invoiceStartDate = document.getElementById('invoiceStartDate').value;
-            const invoiceEndDate = document.getElementById('invoiceEndDate').value;
-
-            // Apply date filtering
-            if (invoiceStartDate || invoiceEndDate) {
-                const startDate = invoiceStartDate ? new Date(invoiceStartDate) : null;
-                const endDate = invoiceEndDate ? new Date(invoiceEndDate) : null;
-                entries = entries.filter(e => {
-                    const entryDate = new Date(e.clockIn);
-                    if (startDate && entryDate < startDate) return false;
-                    if (endDate) {
-                        endDate.setHours(23, 59, 59);
-                        if (entryDate > endDate) return false;
-                    }
-                    return true;
-                });
-            }
-
-            try {
-                let totalHours = 0;
-                const projectBreakdown = {};
-
-                entries.forEach(entry => {
-                    const hours = parseFloat(calculateHours(entry));
-                    totalHours += hours;
-                    const proj = entry.project || 'Other';
-                    projectBreakdown[proj] = (projectBreakdown[proj] || 0) + hours;
-                });
-
-                const totalAmount = totalHours * rate;
-                const invoiceDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-                const empId = String(user.employeeId).padStart(5, '0');
-
-                const pdf = new jsPDF('p', 'mm', 'a4');
-                let yPos = 10;
-
-                // White background
-                pdf.setFillColor(255, 255, 255);
-                pdf.rect(0, 0, 210, 297, 'F');
-
-                // Title
-                pdf.setFont(undefined, 'bold');
-                pdf.setFontSize(24);
-                pdf.setTextColor(...midnightBlue);
-                pdf.text(invoiceTitle, 20, yPos);
-                yPos += 12;
-
-                // Divider
-                pdf.setDrawColor(...midnightBlue);
-                pdf.setLineWidth(0.5);
-                pdf.line(20, yPos, 190, yPos);
-                yPos += 8;
-
-                // Company Info
-                pdf.setFont(undefined, 'bold');
-                pdf.setFontSize(10);
-                pdf.setTextColor(...midnightBlue);
-                pdf.text('Time Tracker Invoice', 20, yPos);
-                yPos += 5;
-                pdf.setFont(undefined, 'normal');
-                pdf.setFontSize(9);
-                pdf.text(`Invoice Date: ${invoiceDate}`, 20, yPos);
-                yPos += 8;
-
-                // Employee Details Section Header
-                pdf.setFillColor(...lightBlue);
-                pdf.rect(20, yPos, 170, 6, 'F');
-                pdf.setFont(undefined, 'bold');
-                pdf.setFontSize(10);
-                pdf.setTextColor(...midnightBlue);
-                pdf.text('EMPLOYEE DETAILS', 22, yPos + 4);
-                yPos += 10;
-
-                pdf.setFont(undefined, 'normal');
-                pdf.setFontSize(9);
-                pdf.setTextColor(...midnightBlue);
-                pdf.text(`Name: ${user.firstName} ${user.lastName}`, 20, yPos);
-                yPos += 5;
-                pdf.text(`Employee ID: EMP #${empId}`, 20, yPos);
-                yPos += 5;
-                pdf.text(`Email: ${email}`, 20, yPos);
-                yPos += 5;
-                pdf.text(`Hourly Rate: $${rate.toFixed(2)}/hour`, 20, yPos);
-                yPos += 8;
-
-                // Description if provided
-                if (invoiceDescription) {
-                    pdf.setFillColor(...lightBlue);
-                    pdf.rect(20, yPos, 170, 6, 'F');
-                    pdf.setFont(undefined, 'bold');
-                    pdf.setFontSize(10);
-                    pdf.setTextColor(...midnightBlue);
-                    pdf.text('DESCRIPTION', 22, yPos + 4);
-                    yPos += 10;
-
-                    pdf.setFont(undefined, 'normal');
-                    pdf.setFontSize(9);
-                    pdf.setTextColor(...midnightBlue);
-                    const descLines = pdf.splitTextToSize(invoiceDescription, 170);
-                    descLines.forEach(line => {
-                        pdf.text(line, 20, yPos);
-                        yPos += 5;
-                    });
-                    yPos += 3;
-                }
-
-                // Divider
-                pdf.setDrawColor(...midnightBlue);
-                pdf.setLineWidth(0.5);
-                pdf.line(20, yPos, 190, yPos);
-                yPos += 8;
-
-                // Project Breakdown Section
-                pdf.setFillColor(...lightBlue);
-                pdf.rect(20, yPos, 170, 6, 'F');
-                pdf.setFont(undefined, 'bold');
-                pdf.setFontSize(10);
-                pdf.setTextColor(...midnightBlue);
-                pdf.text('PROJECT BREAKDOWN', 22, yPos + 4);
-                yPos += 10;
-
-                // Table header
-                pdf.setFillColor(...lightBlue);
-                pdf.rect(20, yPos - 2, 170, 6, 'F');
-                pdf.setFont(undefined, 'bold');
-                pdf.setFontSize(9);
-                pdf.setTextColor(...midnightBlue);
-                pdf.text('Project', 22, yPos + 1);
-                pdf.text('Hours', 140, yPos + 1, { align: 'right' });
-                pdf.text('Amount', 185, yPos + 1, { align: 'right' });
-                yPos += 8;
-
-                // Table rows
-                pdf.setFont(undefined, 'normal');
-                pdf.setFontSize(8);
-                pdf.setTextColor(...midnightBlue);
-                Object.entries(projectBreakdown).forEach(([proj, hours]) => {
-                    const amount = (hours * rate).toFixed(2);
-                    pdf.text(proj.substring(0, 40), 22, yPos);
-                    pdf.text(hours.toFixed(2), 140, yPos, { align: 'right' });
-                    pdf.text('$' + amount, 185, yPos, { align: 'right' });
-                    yPos += 5;
-                });
-                yPos += 5;
-
-                // Divider
-                pdf.setDrawColor(...midnightBlue);
-                pdf.setLineWidth(0.5);
-                pdf.line(20, yPos, 190, yPos);
-                yPos += 8;
-
-                // Time Entries Table
-                pdf.setFillColor(...lightBlue);
-                pdf.rect(20, yPos, 170, 6, 'F');
-                pdf.setFont(undefined, 'bold');
-                pdf.setFontSize(10);
-                pdf.setTextColor(...midnightBlue);
-                pdf.text('TIME ENTRY DETAILS', 22, yPos + 4);
-                yPos += 10;
-
-                // Table header
-                pdf.setFillColor(...lightBlue);
-                pdf.rect(20, yPos - 2, 170, 6, 'F');
-                pdf.setFont(undefined, 'bold');
-                pdf.setFontSize(8);
-                pdf.setTextColor(...midnightBlue);
-                pdf.text('Date', 22, yPos + 1);
-                pdf.text('In', 50, yPos + 1);
-                pdf.text('Out', 75, yPos + 1);
-                pdf.text('Hours', 105, yPos + 1, { align: 'right' });
-                pdf.text('Project', 125, yPos + 1);
-                pdf.text('Task', 160, yPos + 1);
-                yPos += 8;
-
-                // Table data
-                pdf.setFont(undefined, 'normal');
-                pdf.setFontSize(7);
-                pdf.setTextColor(...midnightBlue);
-                entries.forEach(entry => {
-                    const hours = calculateHours(entry);
-                    const date = formatDate(entry.clockIn);
-                    const timeIn = formatTime(entry.clockIn);
-                    const timeOut = formatTime(entry.clockOut);
-                    const proj = (entry.project || '-').substring(0, 20);
-                    const task = (entry.task || '-').substring(0, 20);
-
-                    pdf.text(date, 22, yPos);
-                    pdf.text(timeIn, 50, yPos);
-                    pdf.text(timeOut, 75, yPos);
-                    pdf.text(hours, 105, yPos, { align: 'right' });
-                    pdf.text(proj, 125, yPos);
-                    pdf.text(task, 160, yPos);
-                    yPos += 5;
-
-                    if (yPos > 270) {
-                        pdf.addPage();
-                        // Restore background on new page
-                        pdf.setFillColor(255, 255, 255);
-                        pdf.rect(0, 0, 210, 297, 'F');
-                        yPos = 20;
-                    }
-                });
-
-                yPos += 10;
-
-                // Divider
-                pdf.setDrawColor(...midnightBlue);
-                pdf.setLineWidth(0.5);
-                pdf.line(20, yPos, 190, yPos);
-                yPos += 8;
-
-                // Totals
-                pdf.setFillColor(...lightBlue);
-                pdf.rect(20, yPos, 170, 6, 'F');
-                pdf.setFont(undefined, 'bold');
-                pdf.setFontSize(10);
-                pdf.setTextColor(...midnightBlue);
-                pdf.text('SUMMARY', 22, yPos + 4);
-                yPos += 10;
-
-                pdf.setFont(undefined, 'normal');
-                pdf.setFontSize(10);
-                pdf.setTextColor(...midnightBlue);
-                pdf.text(`Total Hours: ${totalHours.toFixed(2)}`, 20, yPos);
-                yPos += 7;
-                pdf.setFont(undefined, 'bold');
-                pdf.setFontSize(11);
-                pdf.text(`Total Amount Due: $${totalAmount.toFixed(2)}`, 20, yPos);
-
-                pdf.save(`invoice-${user.firstName}-${user.lastName}-${new Date().toISOString().split('T')[0]}.pdf`);
-                closeInvoiceModal();
-                showMessage('Invoice PDF downloaded successfully!');
-            } catch (error) {
-                console.error('Error generating PDF:', error);
-                showMessage('Error generating PDF. Please check browser console for details.');
-            }
-        }
-
-        // Dark Mode Toggle
-        const darkModeToggle = document.getElementById('darkModeToggle');
-
-        // Load dark mode preference
-        function loadDarkMode() {
-            const isDarkMode = localStorage.getItem('darkMode') === 'true';
-            if (isDarkMode) {
-                document.documentElement.classList.add('dark-mode');
-                updateDarkModeButton(true);
-            }
-        }
-
-        function updateDarkModeButton(isDark) {
-            if (isDark) {
-                darkModeToggle.textContent = '☀️ Light Mode';
+            let html = '';
+            if (filtered.length > 0) {
+                html = `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>In</th>
+                                <th>Out</th>
+                                <th class="text-right">Hours</th>
+                                <th>Project</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${filtered.map(e => `
+                                <tr>
+                                    <td>${e.date}</td>
+                                    <td>${e.inTime}</td>
+                                    <td>${e.outTime}</td>
+                                    <td class="text-right">${e.hours.toFixed(2)}</td>
+                                    <td>${e.project}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                    <div class="summary-grid">
+                        <div class="summary-item">
+                            <div class="summary-label">Total Hours</div>
+                            <div class="summary-value">${totalHours.toFixed(2)}</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-label">Hourly Rate</div>
+                            <div class="summary-value">$${(emp?.rate || 0).toFixed(2)}</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-label">Total Amount</div>
+                            <div class="summary-value">$${totalAmount.toFixed(2)}</div>
+                        </div>
+                    </div>
+                `;
             } else {
-                darkModeToggle.textContent = '🌙 Dark Mode';
+                html = '<div class="empty-state">No entries match the selected criteria</div>';
             }
+            document.getElementById('reportContent').innerHTML = html;
         }
 
-        darkModeToggle.addEventListener('click', function() {
-            const isDarkMode = document.documentElement.classList.toggle('dark-mode');
-            localStorage.setItem('darkMode', isDarkMode);
-            updateDarkModeButton(isDarkMode);
-        });
+        // Invoice preview
+        function updateInvoicePreview() {
+            const empId = document.getElementById('invoiceEmployee').value;
+            const startDate = document.getElementById('invoiceStartDate').value;
+            const endDate = document.getElementById('invoiceEndDate').value;
+
+            if (!empId) {
+                document.getElementById('invoicePreview').innerHTML = '<div class="empty-state">Select an employee to preview invoice</div>';
+                return;
+            }
+
+            const filtered = timeEntries.filter(e =>
+                e.empId == empId &&
+                (!startDate || e.date >= startDate) &&
+                (!endDate || e.date <= endDate)
+            );
+
+            const emp = employees.find(e => e.id == empId);
+            const totalHours = filtered.reduce((sum, e) => sum + e.hours, 0);
+            const totalAmount = totalHours * emp.rate;
+
+            let html = `
+                <div style="padding: 30px; background: #1a1f3a; border-radius: 6px;">
+                    <h2 style="color: #c0e0a0; margin-bottom: 20px;">INVOICE</h2>
+                    <p><strong>Bill To:</strong> ${emp.name}</p>
+                    <p><strong>Rate:</strong> $${emp.rate.toFixed(2)}/hr</p>
+                    <p><strong>Period:</strong> ${startDate || 'N/A'} to ${endDate || 'N/A'}</p>
+                    <p style="margin-top: 20px;"><strong>Total Hours:</strong> ${totalHours.toFixed(2)}</p>
+                    <p style="font-size: 18px; color: #c0e0a0; margin-top: 10px;"><strong>Total Due: $${totalAmount.toFixed(2)}</strong></p>
+                </div>
+            `;
+            document.getElementById('invoicePreview').innerHTML = html;
+        }
+
+        function printInvoice() {
+            const empId = document.getElementById('invoiceEmployee').value;
+            if (!empId) {
+                alert('Select an employee first');
+                return;
+            }
+            window.print();
+        }
+
+        // Export data
+        function exportAllData() {
+            const data = {
+                employees,
+                timeEntries,
+                exportDate: new Date().toISOString()
+            };
+            const json = JSON.stringify(data, null, 2);
+            const link = document.createElement('a');
+            link.href = 'data:application/json;charset=utf-8,' + encodeURIComponent(json);
+            link.download = `timesheet-backup-${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+        }
 
         // Initialize
-        loadDarkMode();
-        loadData();
-        showView('login');
-    
-        // Add Employee Manually
-        document.getElementById('addEmployeeManuallyBtn').addEventListener('click', function() {
-            const newEmpId = state.nextEmployeeId;
-            document.getElementById('newEmpIdDisplay').textContent = `EMP #${String(newEmpId).padStart(5, '0')}`;
-            document.getElementById('addEmployeeModal').classList.add('show');
-        });
+        document.getElementById('entryDate').valueAsDate = new Date();
+        document.getElementById('reportStartDate').valueAsDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+        document.getElementById('reportEndDate').valueAsDate = new Date();
+        document.getElementById('invoiceStartDate').valueAsDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+        document.getElementById('invoiceEndDate').valueAsDate = new Date();
 
-        function closeAddEmployeeModal() {
-            document.getElementById('addEmployeeModal').classList.remove('show');
-            document.getElementById('newEmpFirstName').value = '';
-            document.getElementById('newEmpLastName').value = '';
-            document.getElementById('newEmpEmail').value = '';
-            document.getElementById('newEmpPassword').value = '';
-        }
-
-        function saveNewEmployee() {
-            const firstName = document.getElementById('newEmpFirstName').value.trim();
-            const lastName = document.getElementById('newEmpLastName').value.trim();
-            const email = document.getElementById('newEmpEmail').value.trim();
-            const password = document.getElementById('newEmpPassword').value;
-
-            if (!firstName || !lastName || !email || !password) {
-                alert('Please fill in all fields');
-                return;
-            }
-
-            if (password.length < 6) {
-                alert('Password must be at least 6 characters long');
-                return;
-            }
-
-            if (state.users.some(u => u.email === email)) {
-                alert('This email is already registered');
-                return;
-            }
-
-            state.users.push({
-                email: email,
-                firstName: firstName,
-                lastName: lastName,
-                password: password,
-                id: Date.now(),
-                employeeId: state.nextEmployeeId
-            });
-
-            state.employeeRates[email] = 0;
-            state.nextEmployeeId++;
-            saveData();
-
-            alert(`✅ Employee added successfully!\n\nName: ${firstName} ${lastName}\nEmployee ID: EMP #${String(state.nextEmployeeId - 1).padStart(5, '0')}\nEmail: ${email}`);
-            closeAddEmployeeModal();
-            renderAdmin();
-        }
-
-        // Import Timesheet PDF
-        document.getElementById('importTimesheetBtn').addEventListener('click', function() {
-            document.getElementById('importTimesheetModal').classList.add('show');
-        });
-
-        function closeImportTimesheetModal() {
-            document.getElementById('importTimesheetModal').classList.remove('show');
-            document.getElementById('importJsonInput').value = '';
-            document.getElementById('jsonImportStatus').style.display = 'none';
-            document.getElementById('confirmImportBtn').style.display = 'none';
-            state.importedJsonData = null;
-        }
-
-        // Import JSON Timesheet File
-        document.getElementById('importJsonInput').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            try {
-                document.getElementById('jsonImportStatus').style.display = 'block';
-                document.getElementById('jsonImportMessage').textContent = '📂 Reading file...';
-                document.getElementById('importedDataPreview').innerHTML = '';
-                document.getElementById('confirmImportBtn').style.display = 'none';
-
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    try {
-                        const jsonData = JSON.parse(event.target.result);
-
-                        if (!jsonData.employee || !jsonData.timeEntries) {
-                            throw new Error('Invalid timesheet format');
-                        }
-
-                        const employee = jsonData.employee;
-                        const entries = jsonData.timeEntries.map(entry => ({
-                            id: Date.now() + Math.random(),
-                            clockIn: new Date(entry.clockIn),
-                            clockOut: new Date(entry.clockOut),
-                            project: entry.project || 'Imported',
-                            task: entry.task || '',
-                            isManual: false
-                        }));
-
-                        state.importedJsonData = {
-                            employee: employee,
-                            entries: entries
-                        };
-
-                        const preview = `
-                            <strong>✅ File Loaded Successfully!</strong><br><br>
-                            <strong>Employee Information:</strong><br>
-                            Name: ${employee.firstName} ${employee.lastName}<br>
-                            Email: ${employee.email}<br>
-                            Employee ID: ${employee.employeeId}<br><br>
-                            <strong>Time Entries Found:</strong> ${entries.length}<br>
-                            ${entries.length > 0 ? `Date Range: ${formatDate(entries[0].clockIn)} to ${formatDate(entries[entries.length - 1].clockIn)}<br><br>` : ''}
-                            <em>Click "Import Data" to add this employee and their time entries to the system.</em>
-                        `;
-                        document.getElementById('importedDataPreview').innerHTML = preview;
-                        document.getElementById('jsonImportMessage').textContent = '✅ File loaded! Ready to import.';
-                        document.getElementById('confirmImportBtn').style.display = 'inline-block';
-                    } catch (error) {
-                        console.error('JSON parsing error:', error);
-                        document.getElementById('jsonImportMessage').textContent = '❌ Error parsing file. Make sure it\'s a valid timesheet export file.';
-                    }
-                };
-                reader.readAsText(file);
-            } catch (error) {
-                console.error('File reading error:', error);
-                document.getElementById('jsonImportMessage').textContent = '❌ Error reading file.';
-            }
-        });
-
-        function confirmImportTimesheet() {
-            if (!state.importedJsonData) return;
-
-            const data = state.importedJsonData;
-            const existingEmployee = state.users.find(u => u.email === data.employee.email);
-
-            if (existingEmployee) {
-                data.entries.forEach(entry => {
-                    const isDuplicate = state.timeEntries.some(t =>
-                        t.email === data.employee.email &&
-                        new Date(t.clockIn).getTime() === new Date(entry.clockIn).getTime()
-                    );
-                    if (!isDuplicate) {
-                        state.timeEntries.push({
-                            ...entry,
-                            email: data.employee.email
-                        });
-                    }
-                });
-            } else {
-                state.users.push({
-                    email: data.employee.email,
-                    firstName: data.employee.firstName,
-                    lastName: data.employee.lastName,
-                    password: 'imported' + Date.now(),
-                    id: Date.now(),
-                    employeeId: state.nextEmployeeId
-                });
-
-                state.employeeRates[data.employee.email] = 0;
-                state.nextEmployeeId++;
-
-                data.entries.forEach(entry => {
-                    state.timeEntries.push({
-                        ...entry,
-                        email: data.employee.email
-                    });
-                });
-            }
-
-            saveData();
-            alert(`✅ Import Complete!\n\n${data.entries.length} time entries imported for ${data.employee.firstName} ${data.employee.lastName}`);
-            closeImportTimesheetModal();
-            renderAdmin();
-        }
-
+        renderEmployees();
+        renderTimeEntries();
+        updateEmployeeSelects();
+        generateReport();
     </script>
 </body>
 </html>
